@@ -1,0 +1,28 @@
+<h1>Background control</h1>
+<h2>Current program</h2>
+<div class="flex flex-row gap-2">        
+  @for (bg of service.availableBackgrounds; track bg) {
+    <button [class.font-bold]="service.name() === bg" class="hover:underline" (click)="service.name.set(bg)">{{ bg | titlecase }}</button>   
+  }
+</div>
+<br />
+
+<h2>Rendering method</h2>
+<div class="flex flex-row gap-2">        
+  <button [class.font-bold]="service.strategy()?.type === 0" class="hover:underline" (click)="service.toggleRendering(0)">WebGL</button>   
+  <button [class.font-bold]="service.strategy()?.type === 1" class="hover:underline" (click)="service.toggleRendering(1)">WebGPU</button>   
+</div>
+<br />
+
+<h2>Thread</h2>
+<div class="flex flex-row gap-2">        
+  <button [class.font-bold]="service.strategy()?.offscreenRendering === false" class="hover:underline" (click)="service.toggleWebworker(false)">Main Thread</button>   
+  <button [class.font-bold]="service.strategy()?.offscreenRendering === true" class="hover:underline" (click)="service.toggleWebworker(true)">Webworker</button>   
+</div>
+<br/>
+
+<h2>Controls:</h2>
+<div class="flex flex-row gap-2">        
+  <button (click)="service.resume()">Play</button> 
+  <button (click)="service.pause()">Pause</button>
+</div>      
