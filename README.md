@@ -1,59 +1,36 @@
-# JelleBruisten
+# jellebruisten.nl
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.6.
+Personal site and blog built with Angular 21, featuring an animated WebGPU/WebGL background, a static blog compiled at build time, and a tag-filterable post list.
 
-## Development server
+## Stack
 
-To start a local development server, run:
+- **Angular 21.2** — zoneless change detection, SSR, signals throughout
+- **Tailwind CSS 4** — utility-first styling
+- **WebGPU / WebGL 2** — dual-backend shader system with Web Worker offscreen rendering
+- **Shiki** — build-time syntax highlighting (light + dark themes)
+- **Marked + gray-matter** — Markdown parsing and frontmatter extraction
+- **Mermaid** — runtime diagram rendering in blog posts
+- **GitHub Actions → GitHub Pages** — automated deploy on push to `main`
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Dev
 
 ```bash
-ng generate component component-name
+npm start         # dev server at localhost:4200
+npm run build     # generate blog data + Angular build
+npm run build:blog  # blog generation only (scripts/build-blog.mjs)
+npm test          # Karma + Jasmine
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Shader system
 
-```bash
-ng generate --help
-```
+Each visit shows a deterministic daily background — one of six active shaders (aurora, particles, perlin, snow, shapes, ocean) picked by day of year.
 
-## Building
+Every shader ships as both GLSL and WGSL. At runtime the system picks WebGPU if available, otherwise falls back to WebGL 2. Where `OffscreenCanvas` is supported the render loop runs entirely on a Web Worker, keeping the main thread free.
 
-To build the project run:
+Shaders receive three uniforms: `iResolution`, `iTime`, and `iDarkmode`. Resolution is halved on mobile.
 
-```bash
-ng build
-```
+## Blog
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Blog posts live in `src/content/blog/` as Markdown with YAML frontmatter. The build script (`scripts/build-blog.mjs`) compiles them into `src/generated/blog-data.ts` — a single TypeScript constant that gets tree-shaken into the bundle. No HTTP calls at runtime. Syntax highlighting, read time, and route generation all happen at build time.
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Posts can be hidden with `enabled: false` in frontmatter. Tags are filterable via URL query params (`/blog?tag=angular`).
