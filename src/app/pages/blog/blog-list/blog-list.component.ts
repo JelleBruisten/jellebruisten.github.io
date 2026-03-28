@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformServer } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
@@ -114,6 +115,13 @@ export class BlogListComponent {
   private blog   = inject(BlogService);
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
+
+  constructor() {
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      inject(Title).setTitle('Blog — Jelle Bruisten');
+      inject(Meta).updateTag({ name: 'description', content: 'Thoughts on Angular, TypeScript, WebGPU, and building things on the web.' });
+    }
+  }
 
   protected activeTag = toSignal(
     this.route.queryParamMap.pipe(map(p => p.get('tag') ?? '')),

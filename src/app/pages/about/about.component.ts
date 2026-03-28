@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { isPlatformServer } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 
 const skills = [
   { name: 'Angular', level: 'Expert' },
@@ -201,6 +203,13 @@ const contributions = [
 export class AboutComponent {
   protected skills = skills;
   protected contributions = contributions;
+
+  constructor() {
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      inject(Title).setTitle('About — Jelle Bruisten');
+      inject(Meta).updateTag({ name: 'description', content: 'Frontend Architect based in the Netherlands with a deep focus on the Angular ecosystem. Open source contributor to Angular, NgRx, and more.' });
+    }
+  }
 
   protected levelClass(level: string): string {
     switch (level) {

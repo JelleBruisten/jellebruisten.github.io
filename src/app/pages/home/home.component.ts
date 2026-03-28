@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformServer } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 import { BlogService } from '../../services/blog.service';
 
 @Component({
@@ -142,4 +143,11 @@ import { BlogService } from '../../services/blog.service';
 export class HomeComponent {
   private blog = inject(BlogService);
   protected latestPosts = this.blog.getAllPosts().slice(0, 3);
+
+  constructor() {
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      inject(Title).setTitle('Jelle Bruisten — Frontend Architect');
+      inject(Meta).updateTag({ name: 'description', content: 'Frontend Architect based in the Netherlands. Angular enthusiast, open source contributor, and maker of things on the web.' });
+    }
+  }
 }

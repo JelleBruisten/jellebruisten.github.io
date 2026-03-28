@@ -3,12 +3,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   ElementRef,
   inject,
+  PLATFORM_ID,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DatePipe, isPlatformServer } from '@angular/common';
+import { DomSanitizer, Meta, SafeHtml, Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
@@ -114,6 +116,8 @@ export class BlogPostComponent {
   private blog      = inject(BlogService);
   private el        = inject(ElementRef);
   private sanitizer = inject(DomSanitizer);
+  private title     = inject(Title);
+  private meta      = inject(Meta);
 
   private slug = toSignal(
     this.route.paramMap.pipe(map(p => p.get('slug') ?? '')),
@@ -127,6 +131,18 @@ export class BlogPostComponent {
   });
 
   constructor() {
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      effect(() => {
+        const p = this.post();
+        if (p) {
+          this.title.setTitle(`${p.title} — Jelle Bruisten`);
+          this.meta.updateTag({ name: 'description', content: p.description });
+          this.meta.updateTag({ property: 'og:title', content: `${p.title} — Jelle Bruisten` });
+          this.meta.updateTag({ property: 'og:description', content: p.description });
+        }
+      });
+    }
+
     // afterNextRender is browser-only — safe with SSR, runs after [innerHTML] is painted
     afterNextRender(async () => {
       const nodes = (this.el.nativeElement as HTMLElement)
