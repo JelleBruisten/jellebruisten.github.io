@@ -120,9 +120,6 @@ export class BackgroundProgramManager {
       resize: (width: number, height: number) => {
         worker?.postMessage({ type: 'resize', width: Math.round(width * scale), height: Math.round(height * scale)})
       },
-      mousemove: (x: number, y: number) => {
-        worker?.postMessage({ type: 'mousemove', mouseX: x, mouseY: y});
-      },
       darkmode: (dark) => {
         worker?.postMessage({ type: 'darkmode', dark: dark});
       }

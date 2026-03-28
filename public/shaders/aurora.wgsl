@@ -16,7 +16,6 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
-    iMouse: vec2f
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 

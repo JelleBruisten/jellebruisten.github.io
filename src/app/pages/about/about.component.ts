@@ -9,10 +9,8 @@ const skills = [
   { name: 'NX Monorepos', level: 'Advanced' },
   { name: 'Angular Material', level: 'Advanced' },
   { name: 'WebGL / WebGPU', level: 'Intermediate' },
-  { name: 'NestJS', level: 'Intermediate' },
   { name: 'Transloco (i18n)', level: 'Advanced' },
-  { name: 'Tailwind CSS', level: 'Advanced' },
-  { name: 'Python', level: 'Beginner' },
+  { name: 'Tailwind CSS', level: 'Advanced' }
 ];
 
 const contributions = [

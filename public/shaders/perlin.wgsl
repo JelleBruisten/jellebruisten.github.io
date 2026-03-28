@@ -19,7 +19,6 @@ struct Uniforms {
     iResolution: vec2f, // Screen resolution
     iTime: f32,         // Time
     iDarkmode: f32,
-    iMouse: vec2f       // Mouse position
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -74,7 +73,7 @@ fn fs(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
     let darkness  = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
     let bgDark    = vec3f(0.01,  0.02,  0.06);
     let bgLight   = vec3f(0.93,  0.94,  0.96);
-    let lineDark  = vec3f(0.10,  0.14,  0.28);
+    let lineDark  = vec3f(0.35,  0.45,  0.72);
     let lineLight = vec3f(0.48,  0.52,  0.68);
     let bg   = mix(bgLight,   bgDark,   darkness);
     let line = mix(lineLight, lineDark, darkness);

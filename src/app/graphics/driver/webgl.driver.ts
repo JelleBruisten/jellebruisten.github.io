@@ -8,7 +8,7 @@ function compileShader(gl: WebGL2RenderingContext , source: string, type: GLenum
   if(!shader) {
     return null;
   }
-  
+
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -54,7 +54,7 @@ function createProgram(gl: WebGL2RenderingContext , vertexSource: string, fragme
 export async function webGL2Driver(options: RenderProgramOptions): Promise<RenderProgramHandles | null> {
   const canvas = options.canvas;
   // Create a WebGL context
-  const gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+  const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true }) as WebGL2RenderingContext;
 
   if(!canvas || !gl) {
     throw new Error('Failed get a canvas/webgl rendering context');
@@ -93,7 +93,6 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
   // Look up attribute and uniform locations
   const positionLocation = gl.getAttribLocation(program, 'a_position');
   const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-  const mouseLocation = gl.getUniformLocation(program, 'u_mouse');
   const timeLocation = gl.getUniformLocation(program, 'u_time');
   const darkModeLocation = gl.getUniformLocation(program, 'u_darkmode');
 
@@ -112,21 +111,44 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
   let paused = false;
   let stopped = false;
 
+  // Pending resize — applied at the top of the next RAF so canvas.width/height
+  // are never reset outside a frame (resetting the canvas mid-frame clears the
+  // drawing buffer and shows a blank frame before the next RAF redraws it).
+  let pendingWidth: number | null = null;
+  let pendingHeight: number | null = null;
+
   // time
   let accumulatedTime = 0;
   let lastRenderTime = 0; // Last frame's timestamp
+  let frameCount = 0;
   const render = (timestamp: number) => {
+    // Apply any queued resize at the very start of the frame so the canvas is
+    // immediately redrawn at the new size — no visible blank frame.
+    if (pendingWidth !== null && pendingHeight !== null) {
+      canvas.width = pendingWidth;
+      canvas.height = pendingHeight;
+      gl.useProgram(program);
+      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      pendingWidth = null;
+      pendingHeight = null;
+    }
+
     if (!lastRenderTime) {
-      lastRenderTime = timestamp;      
+      lastRenderTime = timestamp;
     }
 
     if (paused || stopped) {
         return; // Skip rendering while paused
     }
 
-    const delta = timestamp - lastRenderTime; // Time since the last frame
-    accumulatedTime += delta; // Add delta to accumulated time
-    lastRenderTime = timestamp; // Update the last render time
+    const rawDelta = timestamp - lastRenderTime;
+    lastRenderTime = timestamp;
+    // Cap at 50 ms to prevent time jumps from GPU pipeline stalls or dropped frames.
+    // WebGL can block the JS thread when the GPU is busy; without a cap a single
+    // stalled frame sends accumulatedTime (and thus particle positions) jumping forward.
+    const delta = Math.min(rawDelta, 50);
+    accumulatedTime += delta;
+    frameCount++;
 
     // Resize the canvas to fit the window
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -138,14 +160,14 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
     // Use the program
     gl.useProgram(program);
 
-    // Set the uniforms    
+    // Set the uniforms
     gl.uniform1f(timeLocation, accumulatedTime / 1000);
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 
     // Draw the quad
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-    requestAnimationFrame(render);
+    rafHandle = requestAnimationFrame(render);
   }
   rafHandle = requestAnimationFrame(render);
 
@@ -171,10 +193,8 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
       rafHandle = requestAnimationFrame(render);
     },
     resize: (width, height) => {
-      canvas.width = width;
-      canvas.height = height;
-      gl.useProgram(program);
-      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      pendingWidth = width;
+      pendingHeight = height;
     },
     stop: () => {
       stopped = true
@@ -185,9 +205,6 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
       // cleanup program
       cleanupProgram();
-    },
-    mousemove: (x, y) => {
-      gl.uniform2f(mouseLocation, x, y);
     },
     darkmode(dark) {
       gl.useProgram(program);

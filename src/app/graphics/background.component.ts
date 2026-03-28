@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component, effect, ElementRef, inject, output } from "@angular/core";
+import { Component, effect, ElementRef, inject, untracked } from "@angular/core";
 import { BackgroundProgramManager, ProgramRef } from "./manager";
 import { RenderStrategy } from "./types";
-import { filter, fromEvent } from "rxjs";
+import { fromEvent } from "rxjs";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BackgroundService } from "./background.service";
@@ -22,25 +22,11 @@ export class BackgroundComponent {
   private programRef: ProgramRef | null = null;
 
   constructor() {
-    // we don't need this component to be attached to the changeDetection scheduler
-    inject(ChangeDetectorRef).detach();
-
     // handle resize
     const document = inject(DOCUMENT);
     const window = document.defaultView as Window;
     fromEvent(window, 'resize').pipe(takeUntilDestroyed()).subscribe(() => {
       this.programRef?.programHandle?.resize(window.innerWidth, window.innerHeight)
-    });
-
-    const body = document.body;
-    // prevent mouse movement events effecting the background if reduced motion is on
-    fromEvent<MouseEvent>(body, 'mousemove', { passive: true }).pipe(filter(() => !this.settings.effectiveReducedMotion()), takeUntilDestroyed()).subscribe((event) => {
-      // correct mouse position based on boundingRect
-      const rect = body.getBoundingClientRect();
-
-      const mouseX = ((event.clientX) - rect.left);
-      const mouseY = 1 - ((event.clientY) - rect.top);  // Normalize Y coordinate
-      this.programRef?.programHandle?.mousemove(mouseX, mouseY)
     });
 
     // effect for updating background
@@ -49,9 +35,16 @@ export class BackgroundComponent {
       const strategy = this.background.strategy();
 
       if(name) {
-        // prevent retriggers with same name and strategy
-        if(this.programRef?.name !== name || this.programRef?.strategy !== strategy) {
-          this.start(name, strategy);
+        const ref = this.programRef;
+        // Use value equality for strategy to avoid spurious restarts from new-but-equivalent objects.
+        // Wrap start() in untracked() so signals read inside start() (e.g. effectiveSettings)
+        // don't become tracked dependencies of this effect.
+        const strategyMatch = ref?.strategy?.type === strategy?.type &&
+                              ref?.strategy?.offscreenRendering === strategy?.offscreenRendering;
+        const refMismatch = ref?.name !== name || !strategyMatch;
+        console.debug('[bg effect] name=%s strategy=%o refMismatch=%o', name, strategy, refMismatch);
+        if(refMismatch) {
+          untracked(() => this.start(name, strategy));
         }
       }
     });
@@ -59,6 +52,15 @@ export class BackgroundComponent {
     effect(() => {
       const dark = this.settings.darkLevel();
       this.programRef?.programHandle?.darkmode(dark);
+    });
+
+    effect(() => {
+      const reduced = this.settings.effectiveReducedMotion();
+      if (reduced) {
+        this.programRef?.programHandle?.pause();
+      } else {
+        this.programRef?.programHandle?.resume();
+      }
     });
 
     this.background.events$.pipe(takeUntilDestroyed()).subscribe((event) => {
@@ -71,12 +73,21 @@ export class BackgroundComponent {
   }
 
   async start(name: string, renderStrategy?: RenderStrategy | null) {
-    const program = await this.programManager.startProgram(name, renderStrategy, this.settings.effectiveSettings());
+    console.debug('[bg start] called name=%s renderStrategy=%o', name, renderStrategy);
+    const settings = untracked(() => this.settings.effectiveSettings());
+    const program = await this.programManager.startProgram(name, renderStrategy, settings);
     if(program) {
+      const isNew = program !== this.programRef;
+      console.debug('[bg start] resolved program isNew=%o sameCanvas=%o', isNew, program.canvas === this.programRef?.canvas);
       const canvas = program.canvas;
       (this.host.nativeElement as HTMLElement).replaceChildren(canvas);
-      this.background.strategy.set(program.strategy);
+      // programRef must be updated before strategy.set() so the reactive effect
+      // never sees a stale ref when it re-runs after the strategy signal changes.
       this.programRef = program;
+      this.background.strategy.set(program.strategy);
+      if (untracked(() => this.settings.effectiveReducedMotion())) {
+        program.programHandle?.pause();
+      }
     }
   }
 }

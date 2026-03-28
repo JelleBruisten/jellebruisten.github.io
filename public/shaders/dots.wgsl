@@ -20,7 +20,6 @@ struct Uniforms {
     iResolution: vec2f, // Screen resolution
     iTime: f32,         // Time
     iDarkmode: f32,
-    iMouse: vec2f       // Mouse position
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -88,7 +87,7 @@ fn layer(uv: vec2f) -> f32 {
 @fragment
 fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     var uv: vec2f = (fragCoord.xy - vec2f(0.5, 0.5) *  uniforms.iResolution.xy) / uniforms.iResolution.y;
-    var mouse = (uniforms.iMouse.xy / uniforms.iResolution.xy) / -0.5 * 0.5;
+    var mouse = vec2f(0.0);
     var m = 0.0;
     let time = uniforms.iTime * 0.03;
 

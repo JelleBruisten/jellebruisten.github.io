@@ -4,7 +4,16 @@ import { SettingsService } from "../settings/setting.service";
 import { Subject } from "rxjs";
 
 const availableBackgrounds = [
-  'aurora', 'particles', 'perlin', 'snow', 'shapes', 'waves', 'voronoi', 'hex', 'example'
+  'aurora',
+  'particles',
+  // 'dots',
+  'perlin',
+  'snow',
+  'shapes',
+  'waves',
+  'voronoi',
+  'hex',
+  'example'
 ] as const;
 
 type BackgroundName = typeof availableBackgrounds[number];

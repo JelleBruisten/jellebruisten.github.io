@@ -2,7 +2,6 @@
 precision highp float;
 
 uniform vec2 u_resolution;
-uniform vec2 u_mouse;
 uniform float u_time;
 uniform float u_darkmode;
 out vec4 fragColor;
@@ -85,7 +84,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1)
     vec2 uv = (fragCoord - .5 * u_resolution.xy)/u_resolution.y;      
-    vec2 mouse = (u_mouse.xy/u_resolution.xy)/-0.5 * 0.5;
+    vec2 mouse = vec2(0.0);
     float m = 0.0;
     
     // controls movement of layers close and far

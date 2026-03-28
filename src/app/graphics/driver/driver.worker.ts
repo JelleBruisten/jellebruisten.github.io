@@ -3,6 +3,12 @@ import { type RenderProgramHandles, type RenderStrategy, RenderStrategyType } fr
 
 
 let programHandles: RenderProgramHandles | null = null;
+
+// Serialize init operations: a second 'init' message must wait for the first to
+// complete before starting. Without this, the async onmessage handler returns at
+// the first await, the worker processes the next 'init' immediately, and both
+// render loops run concurrently (causing two animations visible at once).
+let initChain = Promise.resolve();
 interface BackgroundOptions {
   canvas: OffscreenCanvas;
   strategy: RenderStrategy,
@@ -67,11 +73,14 @@ const init = async (evt: BackgroundOptions) => {
 }
 
 
-onmessage = async(evt) => {
+onmessage = (evt) => {
   switch(evt.data.type) {
-    case 'init':      
-      programHandles?.stop();
-      programHandles = await init(evt.data);          
+    case 'init':
+      // Chain onto the previous init so they never run concurrently.
+      initChain = initChain.then(async () => {
+        programHandles?.stop();
+        programHandles = await init(evt.data) ?? null;
+      });
     break;
     case 'stop':
       programHandles?.stop();
@@ -85,9 +94,6 @@ onmessage = async(evt) => {
     case 'resize':
     	programHandles?.resize(evt.data.width, evt.data.height)
     break;
-    case 'mousemove':
-    	programHandles?.mousemove(evt.data.mouseX, evt.data.mouseY)
-    break;    
     case 'darkmode':
       programHandles?.darkmode(evt.data.dark)
     break;    

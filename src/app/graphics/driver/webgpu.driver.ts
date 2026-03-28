@@ -40,13 +40,12 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
   const uniforms = {
     iResolution: [canvas.width, canvas.height],
     iTime: 0.0,
-    iMouse: [0, 0],
     iDarkMode: clamp(options.settings["dark"] as number, darkModeColor, lightModeColor)
   };
 
   // Create a uniform buffer
   const uniformBuffer = device.createBuffer({
-    size: 24, // vec2 (8 bytes) + float (4 bytes) + vec2 (8 bytes) + 4 bytes of darkmode
+    size: 16, // vec2 (8 bytes) + float (4 bytes) + float (4 bytes) darkmode
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
@@ -108,8 +107,6 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
       uniforms.iResolution[1],
       uniforms.iTime,
       uniforms.iDarkMode,
-      uniforms.iMouse[0],
-      uniforms.iMouse[1],      
     ]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer);
   };
@@ -187,9 +184,6 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
       
       device.destroy();
       uniformBuffer.destroy();
-    },
-    mousemove: (x, y) => {
-      uniforms.iMouse = [x, -y];
     },
     darkmode: (dark) => {
       uniforms.iDarkMode = clamp(dark, darkModeColor, lightModeColor);

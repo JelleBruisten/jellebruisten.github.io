@@ -2,7 +2,6 @@
 precision highp float;
 
 uniform vec2 u_resolution;
-uniform vec2 u_mouse;
 uniform float u_time;
 uniform float u_darkmode;
 out vec4 fragColor;
@@ -45,7 +44,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) //Meta-structure adapted
     float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
     vec3 bgDark    = vec3(0.01,  0.02,  0.06);
     vec3 bgLight   = vec3(0.93,  0.94,  0.96);
-    vec3 lineDark  = vec3(0.10,  0.14,  0.28);
+    vec3 lineDark  = vec3(0.35,  0.45,  0.72);
     vec3 lineLight = vec3(0.48,  0.52,  0.68);
     vec3 bg   = mix(bgLight,   bgDark,   darkness);
     vec3 line = mix(lineLight, lineDark, darkness);
