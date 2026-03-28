@@ -79,8 +79,7 @@ const contributions = [
             <p>
               Beyond my professional work, I contribute to open source projects across
               the Angular ecosystem: the framework itself, NgRx, Transloco, NX, and
-              Angular Material. I've also published my own libraries, including an
-              Angular heatmap tracker and an RxJS subscription sink utility.
+              Angular Material.
             </p>
             <p>
               When I'm not writing TypeScript, I'm probably pushing pixels with WebGL

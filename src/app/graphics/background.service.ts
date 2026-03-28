@@ -4,7 +4,7 @@ import { SettingsService } from "../settings/setting.service";
 import { Subject } from "rxjs";
 
 const availableBackgrounds = [
-  'aurora', 'perlin', 'snow', 'shapes', 'particles', 'waves', 'voronoi', 'hex', 'example'
+  'aurora', 'particles', 'perlin', 'snow', 'shapes', 'waves', 'voronoi', 'hex', 'example'
 ] as const;
 
 type BackgroundName = typeof availableBackgrounds[number];
@@ -20,7 +20,7 @@ export class BackgroundService {
 
   readonly strategy = signal<RenderStrategy | null>(null);
   readonly showBgSwapPrompt = signal(false);
-  readonly name = signal<BackgroundName>(this.settings.effectiveDark() ? 'aurora' : 'perlin');
+  readonly name = signal<BackgroundName>(this.settings.effectiveDark() ? 'aurora' : 'particles');
   readonly availableBackgrounds = [... availableBackgrounds];
 
   setBackground(name: BackgroundName): void {

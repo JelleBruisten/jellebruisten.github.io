@@ -30,8 +30,8 @@ import { BlogService } from '../../services/blog.service';
 
         <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-300
                    max-w-2xl mx-auto mb-10 leading-relaxed">
-          Frontend Architect. Angular enthusiast, open source contributor,
-          and maker of things on the web.
+          Frontend Architect. Angular enthusiast, web platform tinkerer,
+          and open source contributor.
         </p>
 
         <!-- CTAs -->

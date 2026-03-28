@@ -104,12 +104,12 @@ export class BgSwapPromptComponent {
 
   protected remember = signal(false);
   protected readonly idealBg = computed(() =>
-    this.settings.effectiveDark() ? 'aurora' : 'perlin'
+    this.settings.effectiveDark() ? 'aurora' : 'particles'
   );
 
   protected accept(): void {
     const bg = this.idealBg();
-    if (bg === 'aurora' || bg === 'perlin') this.bgService.name.set(bg);
+    if (bg === 'aurora' || bg === 'particles') this.bgService.name.set(bg);
     if (this.remember()) this.settings.setBgSwapChoice('always');
     this.bgService.showBgSwapPrompt.set(false);
   }

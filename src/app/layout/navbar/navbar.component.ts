@@ -126,7 +126,7 @@ export class NavbarComponent {
   protected toggleDark(): void {
     this.settings.dark.set(this.settings.effectiveDark() ? 1 : 2);
 
-    const idealBg = this.settings.effectiveDark() ? 'aurora' : 'perlin';
+    const idealBg = this.settings.effectiveDark() ? 'aurora' : 'particles';
     if (this.bgService.name() === idealBg) return;
 
     const choice = this.settings.bgSwapChoice();
