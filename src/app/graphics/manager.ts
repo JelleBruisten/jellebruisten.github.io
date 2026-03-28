@@ -4,12 +4,12 @@ import { RenderProgramHandles, RenderProgramOptions, RenderStrategy, RenderStrat
 import { DOCUMENT } from "@angular/common";
 import { printRenderInfo } from "./driver/debug";
 
-export interface ProgramRef { 
-  readonly name: string; 
-  readonly strategy: RenderStrategy; 
-  readonly programHandle: RenderProgramHandles | null; 
-  readonly canvas: HTMLCanvasElement; 
-  readonly destroy: () => void; 
+export interface ProgramRef {
+  readonly name: string;
+  readonly strategy: RenderStrategy;
+  readonly programHandle: RenderProgramHandles | null;
+  readonly canvas: HTMLCanvasElement;
+  readonly destroy: () => void;
 }
 
 type Settings = Record<string, boolean | number>;
@@ -43,23 +43,27 @@ export class BackgroundProgramManager {
 
     this.currentProgram?.destroy();
 
+    // on small screens render at half resolution — the GPU is shared with the
+    // compositor, so saturating it with a full-res shader causes scroll jank
+    const scale = window.innerWidth < 768 ? 0.5 : 1.0;
+
     // create a new canvas and apply current window size
     const canvas = this.document.createElement('canvas');
-    canvas.height = window.innerHeight;
-    canvas.width = window.innerWidth;
+    canvas.height = Math.round(window.innerHeight * scale);
+    canvas.width = Math.round(window.innerWidth * scale);
     canvas.style.display = 'block';
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.style.pointerEvents = 'none';
 
     // program handles/worker references
-    let programHandles: RenderProgramHandles | null = null;    
+    let programHandles: RenderProgramHandles | null = null;
 
     // start program either offscreen or normally
     if(renderStrategy.offscreenRendering) {
-      programHandles = await this.startProgramOffscreen(name, canvas, renderStrategy, settings)      
-    } else {    
-      programHandles = await this.startProgramNormally(name, canvas, renderStrategy, settings);
+      programHandles = await this.startProgramOffscreen(name, canvas, renderStrategy, settings, scale)
+    } else {
+      programHandles = await this.startProgramNormally(name, canvas, renderStrategy, settings, scale);
     }
 
     // construct a information object, with the current strategy, canvas, cleanup methods, handles for interacting with the graphics backend
@@ -73,7 +77,7 @@ export class BackgroundProgramManager {
         // stop program, remove canvas and terminate the worker if there is any
         programHandles?.stop();
         canvas?.remove();
-        cleanupController?.abort();        
+        cleanupController?.abort();
       }
     };
 
@@ -81,25 +85,25 @@ export class BackgroundProgramManager {
     isDevMode() && printRenderInfo(program);
 
     this.currentProgram = program;
-    
+
     // return program
     return program;
   }
 
-  private async startProgramOffscreen(shaderName: string,canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}) {
-    // worker 
+  private async startProgramOffscreen(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
+    // worker
     const worker = this.getWorker();
 
     // setup program
     const offscreen = canvas.transferControlToOffscreen();
-    worker.postMessage({ 
-      canvas: offscreen, 
+    worker.postMessage({
+      canvas: offscreen,
       strategy: renderStrategy,
-      width: document.defaultView?.innerWidth ?? 300,
-      height: document.defaultView?.innerHeight ?? 300,
+      width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
+      height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
       shaderName: shaderName,
       settings: settings,
-      type: 'init' 
+      type: 'init'
     }, [offscreen]);
 
     // setup worker
@@ -114,7 +118,7 @@ export class BackgroundProgramManager {
         worker?.postMessage({ type: 'pause' })
       },
       resize: (width: number, height: number) => {
-        worker?.postMessage({ type: 'resize', width: width, height: height})
+        worker?.postMessage({ type: 'resize', width: Math.round(width * scale), height: Math.round(height * scale)})
       },
       mousemove: (x: number, y: number) => {
         worker?.postMessage({ type: 'mousemove', mouseX: x, mouseY: y});
@@ -132,14 +136,14 @@ export class BackgroundProgramManager {
     return this.worker;
   }
 
-  private async startProgramNormally(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}) {
+  private async startProgramNormally(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
     let programHandles: RenderProgramHandles | null = null;
     const options = {
       canvas: canvas,
       navigator: navigator,
-      height: document.defaultView?.innerHeight ?? 300,
-      width: document.defaultView?.innerWidth ?? 300,  
-      settings: settings    
+      height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
+      width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
+      settings: settings
     } as const
 
     switch(renderStrategy.type) {
@@ -159,6 +163,14 @@ export class BackgroundProgramManager {
         }));
       }
       break;
+    }
+
+    if (programHandles && scale < 1) {
+      const originalResize = programHandles.resize;
+      programHandles = {
+        ...programHandles,
+        resize: (w: number, h: number) => originalResize(Math.round(w * scale), Math.round(h * scale))
+      };
     }
 
     return programHandles;

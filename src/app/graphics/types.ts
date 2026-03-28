@@ -11,14 +11,14 @@ export interface RenderStrategy {
 export interface RenderProgramHandles {
   stop(): void;
   pause(): void;
-  resume(): void; 
+  resume(): void;
   resize(width: number, height: number): void;
   mousemove(x: number, y: number): void;
   darkmode(darkmode: number): void;
 }
 
 export interface RenderProgramOptions {
-  canvas: HTMLCanvasElement | OffscreenCanvas, 
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   navigator: Navigator,
   width: number;
   height: number;

@@ -34,7 +34,7 @@ export class BackgroundComponent {
 
     const body = document.body;
     // prevent mouse movement events effecting the background if reduced motion is on
-    fromEvent<MouseEvent>(body, 'mousemove').pipe(filter(() => !this.settings.effectiveReducedMotion()), takeUntilDestroyed()).subscribe((event) => {
+    fromEvent<MouseEvent>(body, 'mousemove', { passive: true }).pipe(filter(() => !this.settings.effectiveReducedMotion()), takeUntilDestroyed()).subscribe((event) => {
       // correct mouse position based on boundingRect
       const rect = body.getBoundingClientRect();
 
