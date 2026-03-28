@@ -56,7 +56,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
             (0.25 - uv.y) * _BlizardFactor + rnd(j) + 0.1 * cos(uniforms.iTime + sin(j)),
             fmod(sin(j) + speed * (uniforms.iTime * 1.5 * (0.1 + _BlizardFactor)), yRange)
         );
-        let radius = 0.00001 + speed * 0.012;
+        let radiusMult = select(1.0, 2.5, uniforms.iResolution.x < 400.0);
+        let radius = (0.001 + speed * 0.012) * radiusMult;
         fragColor += vec4<f32>(0.09 * drawCircle(center, radius, uv));
     }
 
