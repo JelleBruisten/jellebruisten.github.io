@@ -137,7 +137,8 @@ import { SettingsService } from '../../settings/setting.service';
     <aside class="drawer"
       [style.transform]="open() ? 'translateX(0)' : 'translateX(100%)'"
       aria-label="Settings panel"
-      [attr.aria-hidden]="!open()">
+      [attr.aria-hidden]="!open()"
+      [attr.inert]="!open() ? '' : null">
       <div class="drawer-inner">
         <h2 class="drawer-title">Settings</h2>
 
