@@ -66,7 +66,7 @@ import { SettingsService } from '../../settings/setting.service';
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: rgba(100,116,139,1);
+      color: rgba(148,163,184,1);
       margin-bottom: 0.75rem;
     }
     .btn-group { display: flex; gap: 0.5rem; }

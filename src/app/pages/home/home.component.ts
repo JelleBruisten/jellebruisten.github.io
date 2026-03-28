@@ -15,7 +15,7 @@ import { BlogService } from '../../services/blog.service';
       <div class="text-center max-w-4xl">
 
         <p class="text-xs font-semibold tracking-[0.25em] uppercase
-                   text-brand/70 dark:text-brand-light/70 mb-5">
+                   text-brand-dark dark:text-brand-light mb-5">
           Based in the Netherlands
         </p>
 
@@ -52,8 +52,8 @@ import { BlogService } from '../../services/blog.service';
           <a href="https://www.linkedin.com/in/jelle-bruisten-a891a545/"
              target="_blank" rel="noopener noreferrer"
              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                    border-2 border-brand/30 dark:border-brand-light/30
-                    text-brand dark:text-brand-light
+                    border-2 border-brand-dark/30 dark:border-brand-light/30
+                    text-brand-dark dark:text-brand-light
                     hover:bg-brand/8 dark:hover:bg-brand-light/8
                     transition-all hover:scale-105 active:scale-95">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -101,7 +101,7 @@ import { BlogService } from '../../services/blog.service';
               Latest Posts
             </h2>
             <a routerLink="/blog"
-               class="text-sm font-medium text-brand dark:text-brand-light hover:underline
+               class="text-sm font-medium text-brand-dark dark:text-brand-light hover:underline
                       flex items-center gap-1">
               View all
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -121,14 +121,14 @@ import { BlogService } from '../../services/blog.service';
                         hover:border-brand/40 dark:hover:border-brand-light/40
                         hover:bg-brand/5 dark:hover:bg-brand-light/5
                         transition-all">
-                <div class="text-xs text-slate-400 dark:text-slate-500 mb-2 font-medium">
+                <div class="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
                   {{ post.date | date:'mediumDate' }} &middot; {{ post.readTime }} min read
                 </div>
                 <h3 class="font-semibold text-slate-900 dark:text-white mb-2
-                           group-hover:text-brand dark:group-hover:text-brand-light transition-colors">
+                           group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors">
                   {{ post.title }}
                 </h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                   {{ post.description }}
                 </p>
               </a>

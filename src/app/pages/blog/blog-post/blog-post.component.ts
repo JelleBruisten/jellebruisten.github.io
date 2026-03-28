@@ -23,8 +23,8 @@ import { BlogService } from '../../../services/blog.service';
       <!-- Back -->
       <a routerLink="/blog"
          class="inline-flex items-center gap-2 text-sm font-medium
-                text-slate-500 dark:text-slate-400
-                hover:text-brand dark:hover:text-brand-light
+                text-slate-600 dark:text-slate-400
+                hover:text-brand-dark dark:hover:text-brand-light
                 transition-colors mb-8">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -45,7 +45,7 @@ import { BlogService } from '../../../services/blog.service';
               @for (tag of p.tags; track tag) {
                 <span class="text-xs font-medium px-2.5 py-1 rounded-full
                              bg-brand/8 dark:bg-brand-light/8
-                             text-brand dark:text-brand-light">
+                             text-brand-dark dark:text-brand-light">
                   {{ tag }}
                 </span>
               }
@@ -59,7 +59,7 @@ import { BlogService } from '../../../services/blog.service';
           </h1>
 
           <!-- Meta -->
-          <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 mb-10
+          <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 mb-10
                       pb-8 border-b border-slate-200/60 dark:border-slate-700/60">
             <time [dateTime]="p.date">{{ p.date | date:'longDate' }}</time>
             <span aria-hidden="true">&middot;</span>
@@ -77,8 +77,8 @@ import { BlogService } from '../../../services/blog.service';
         <div class="mt-8">
           <a routerLink="/blog"
              class="inline-flex items-center gap-2 text-sm font-medium
-                    text-slate-500 dark:text-slate-400
-                    hover:text-brand dark:hover:text-brand-light transition-colors">
+                    text-slate-600 dark:text-slate-400
+                    hover:text-brand-dark dark:hover:text-brand-light transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -98,7 +98,7 @@ import { BlogService } from '../../../services/blog.service';
           </p>
           <a routerLink="/blog"
              class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                    bg-brand text-white hover:bg-brand-dark
+                    bg-brand-dark text-white hover:brightness-90
                     transition-all hover:scale-105 active:scale-95">
             Back to blog
           </a>

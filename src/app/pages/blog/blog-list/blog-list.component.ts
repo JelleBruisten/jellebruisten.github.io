@@ -40,7 +40,7 @@ import { BlogService } from '../../../services/blog.service';
                     @for (tag of post.tags; track tag) {
                       <span class="text-xs font-medium px-2.5 py-1 rounded-full
                                    bg-brand/8 dark:bg-brand-light/8
-                                   text-brand dark:text-brand-light">
+                                   text-brand-dark dark:text-brand-light">
                         {{ tag }}
                       </span>
                     }
@@ -48,7 +48,7 @@ import { BlogService } from '../../../services/blog.service';
                 }
 
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2
-                           group-hover:text-brand dark:group-hover:text-brand-light transition-colors">
+                           group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors">
                   {{ post.title }}
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
@@ -61,21 +61,21 @@ import { BlogService } from '../../../services/blog.service';
                    fill="none" stroke="currentColor" stroke-width="2"
                    stroke-linecap="round" stroke-linejoin="round"
                    class="shrink-0 mt-1 text-slate-300 dark:text-slate-600
-                          group-hover:text-brand dark:group-hover:text-brand-light
+                          group-hover:text-brand-dark dark:group-hover:text-brand-light
                           group-hover:translate-x-1 transition-all"
                    aria-hidden="true">
                 <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
               </svg>
             </div>
 
-            <div class="mt-4 text-xs font-medium text-slate-400 dark:text-slate-500">
+            <div class="mt-4 text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ post.date | date:'longDate' }} &middot; {{ post.readTime }} min read
             </div>
           </a>
         }
 
         @empty {
-          <div class="text-center py-20 text-slate-500 dark:text-slate-400">
+          <div class="text-center py-20 text-slate-600 dark:text-slate-400">
             No posts yet — check back soon.
           </div>
         }

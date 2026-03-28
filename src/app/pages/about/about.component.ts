@@ -101,8 +101,8 @@ const contributions = [
             <a href="https://www.linkedin.com/in/jelle-bruisten-a891a545/"
                target="_blank" rel="noopener noreferrer"
                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm
-                      border border-brand/30 dark:border-brand-light/30
-                      text-brand dark:text-brand-light
+                      border border-brand-dark/30 dark:border-brand-light/30
+                      text-brand-dark dark:text-brand-light
                       hover:bg-brand/8 dark:hover:bg-brand-light/8
                       transition-all hover:scale-105 active:scale-95">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -164,14 +164,14 @@ const contributions = [
                      fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round"
                      class="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500
-                            group-hover:text-brand dark:group-hover:text-brand-light transition-colors"
+                            group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors"
                      aria-hidden="true">
                   <path d="m9 9-2 3h10l-2-3"/><rect width="6" height="6" x="9" y="3" rx="1"/>
                   <path d="M12 15v6"/><path d="M6 21h12"/>
                 </svg>
                 <div>
                   <div class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200
-                               group-hover:text-brand dark:group-hover:text-brand-light transition-colors">
+                               group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors">
                     {{ contrib.name }}
                   </div>
                   <div class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
@@ -191,8 +191,8 @@ const contributions = [
         </p>
         <a routerLink="/blog"
            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                  bg-brand text-white hover:bg-brand-dark
-                  transition-all hover:scale-105 active:scale-95 shadow-lg shadow-brand/25">
+                  bg-brand-dark text-white hover:brightness-90
+                  transition-all hover:scale-105 active:scale-95 shadow-lg shadow-brand-dark/25">
           Read the blog
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2"
@@ -211,7 +211,7 @@ export class AboutComponent {
 
   protected levelClass(level: string): string {
     switch (level) {
-      case 'Expert':       return 'bg-brand/10 text-brand dark:bg-brand-light/10 dark:text-brand-light';
+      case 'Expert':       return 'bg-brand/10 text-brand-dark dark:bg-brand-light/10 dark:text-brand-light';
       case 'Advanced':     return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
       case 'Intermediate': return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
       default:             return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400';
