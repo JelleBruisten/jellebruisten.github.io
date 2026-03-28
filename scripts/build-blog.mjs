@@ -20,6 +20,9 @@ const root = join(__dirname, '..');
 const contentDir   = join(root, 'src', 'content', 'blog');
 const generatedDir = join(root, 'src', 'generated');
 const routesFile   = join(root, 'routes.txt');
+const sitemapFile  = join(root, 'public', 'sitemap.xml');
+
+const SITE_URL = 'https://jellebruisten.nl';
 
 function escapeHtml(str) {
   return str
@@ -123,8 +126,37 @@ async function buildBlog() {
   const routes = ['/', '/about', '/blog', ...enabled.map(p => `/blog/${p.slug}`)];
   await writeFile(routesFile, routes.join('\n') + '\n', 'utf-8');
 
+  // Generate sitemap.xml
+  const today = new Date().toISOString().split('T')[0];
+  const staticPages = [
+    { path: '/',        priority: '1.0', changefreq: 'monthly' },
+    { path: '/about',  priority: '0.8', changefreq: 'monthly' },
+    { path: '/blog',   priority: '0.9', changefreq: 'weekly'  },
+  ];
+  const urlEntries = [
+    ...staticPages.map(({ path, priority, changefreq }) => `
+  <url>
+    <loc>${SITE_URL}${path}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`),
+    ...enabled.map(p => `
+  <url>
+    <loc>${SITE_URL}/blog/${p.slug}/</loc>
+    <lastmod>${p.date}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`),
+  ];
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlEntries.join('')}
+</urlset>\n`;
+  await writeFile(sitemapFile, sitemap, 'utf-8');
+
   console.log(`✓ Blog: generated ${enabled.length} posts (${posts.length - enabled.length} disabled)`);
   console.log(`✓ Routes: ${routes.length} routes written to routes.txt`);
+  console.log(`✓ Sitemap: ${staticPages.length + enabled.length} URLs written to public/sitemap.xml`);
 }
 
 buildBlog().catch((err) => {
