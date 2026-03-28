@@ -205,6 +205,8 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
       // cleanup program
       cleanupProgram();
+      gl.deleteBuffer(vertexBuffer);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
     },
     darkmode(dark) {
       gl.useProgram(program);

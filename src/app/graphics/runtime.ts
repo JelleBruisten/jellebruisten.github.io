@@ -33,8 +33,14 @@ export class GraphicsRuntime {
 
     // Get WebGLRenderingContext from canvas element.
     const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    const supported = gl instanceof WebGLRenderingContext;
 
-    return gl instanceof WebGLRenderingContext
+    // Release the context immediately to avoid hitting the browser's context limit
+    if (supported) {
+      (gl as WebGLRenderingContext).getExtension('WEBGL_lose_context')?.loseContext();
+    }
+
+    return supported;
   }
 
   getRecommendedRenderStrategy() {

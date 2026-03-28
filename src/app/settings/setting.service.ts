@@ -2,44 +2,15 @@ import { DOCUMENT } from "@angular/common";
 import { computed, effect, inject, Injectable, linkedSignal, signal } from "@angular/core";
 import { darkModeColor, lightModeColor } from "../graphics/driver/constant";
 
-const enum MotionPreference {
-  Auto,
-  Reduced,
-  NoPreference
-}
-
 const enum DarkPreference {
   Auto,
   Light,
   Dark
 }
 
-interface EffectiveSettings {
-  motion: boolean,
-  dark: boolean
-}
-
 @Injectable({providedIn: 'root'})
 export class SettingsService {
   private readonly document = inject(DOCUMENT);
-
-  // motion
-  readonly motion = signal<MotionPreference>(MotionPreference.Reduced);
-  readonly effectiveReducedMotion = computed(() => {
-    const motion = this.motion();
-    switch(motion) {
-      case MotionPreference.Reduced:
-        return true;
-      case MotionPreference.NoPreference:
-        return false;
-
-      case MotionPreference.Auto:
-      default:
-        const window = this.document.defaultView;
-        const prefersReduced = window?.matchMedia?.('(prefers-reduced-motion)')?.matches;
-        return !!prefersReduced;
-    }
-  })
 
   // darkmode
   readonly dark = signal<DarkPreference>(DarkPreference.Auto);
@@ -68,29 +39,9 @@ export class SettingsService {
 
   readonly showFps = signal(false);
 
-  readonly bgSwapChoice = signal<'ask' | 'always' | 'never'>(
-    (this.document.defaultView?.localStorage?.getItem('bgSwapChoice') as 'ask' | 'always' | 'never') ?? 'ask'
-  );
-
-  setBgSwapChoice(choice: 'ask' | 'always' | 'never'): void {
-    this.bgSwapChoice.set(choice);
-    this.document.defaultView?.localStorage?.setItem('bgSwapChoice', choice);
-  }
-
-  clearAllData(): void {
-    this.document.defaultView?.localStorage?.clear();
-    this.dark.set(DarkPreference.Auto);
-    this.motion.set(MotionPreference.Reduced);
-    this.showFps.set(false);
-    this.bgSwapChoice.set('ask');
-  }
-
-  readonly effectiveSettings = computed(() => {
-    return {
-      dark: this.darkLevel(),
-      motion: this.effectiveReducedMotion()
-    } as const
-  })
+  readonly effectiveSettings = computed(() => ({
+    dark: this.darkLevel(),
+  }))
 
   constructor() {
     const document = inject(DOCUMENT);

@@ -75,9 +75,9 @@ const contributions = [
               by Angular Signals and the zoneless future they're enabling.
             </p>
             <p>
-              Beyond my professional work, I contribute to open source projects across
-              the Angular ecosystem: the framework itself, NgRx, Transloco, NX, and
-              Angular Material.
+              Outside of my professional work, I stay close to the craft by exploring
+              emerging technologies, contributing to open source where I can, and
+              building personal projects along the way.
             </p>
             <p>
               When I'm not writing TypeScript, I'm probably pushing pixels with WebGL

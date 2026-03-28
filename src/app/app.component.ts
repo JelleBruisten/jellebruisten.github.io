@@ -2,8 +2,6 @@ import { Component, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { BackgroundComponent } from './graphics/background.component';
-import { BgSwapPromptComponent } from './graphics/bg-swap-prompt.component';
-import { BackgroundService } from './graphics/background.service';
 import { FpsCounterComponent } from './graphics/fps-counter.component';
 import { NavbarComponent } from './layout/navbar/navbar.component';
 import { SettingsDrawerComponent } from './layout/settings-drawer/settings-drawer.component';
@@ -11,7 +9,7 @@ import { SettingsService } from './settings/setting.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BackgroundComponent, BgSwapPromptComponent, FpsCounterComponent, NavbarComponent, SettingsDrawerComponent],
+  imports: [RouterOutlet, BackgroundComponent, FpsCounterComponent, NavbarComponent, SettingsDrawerComponent],
   template: `
     <!-- Fixed full-screen animated background (browser only — canvas APIs don't exist on server) -->
     @if (isBrowser) {
@@ -19,9 +17,6 @@ import { SettingsService } from './settings/setting.service';
       <app-settings-drawer></app-settings-drawer>
       @if (settings.showFps()) {
         <app-fps-counter></app-fps-counter>
-      }
-      @if (bgService.showBgSwapPrompt()) {
-        <app-bg-swap-prompt></app-bg-swap-prompt>
       }
     }
 
@@ -47,5 +42,4 @@ import { SettingsService } from './settings/setting.service';
 export class AppComponent {
   protected isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected settings = inject(SettingsService);
-  protected bgService = inject(BackgroundService);
 }

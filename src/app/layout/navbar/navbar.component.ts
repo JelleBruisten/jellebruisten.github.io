@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { BackgroundService } from '../../graphics/background.service';
 import { SettingsService } from '../../settings/setting.service';
 
 @Component({
@@ -121,19 +120,8 @@ import { SettingsService } from '../../settings/setting.service';
 })
 export class NavbarComponent {
   protected readonly settings = inject(SettingsService);
-  private readonly bgService = inject(BackgroundService);
 
   protected toggleDark(): void {
     this.settings.dark.set(this.settings.effectiveDark() ? 1 : 2);
-
-    const idealBg = this.settings.effectiveDark() ? 'aurora' : 'particles';
-    if (this.bgService.name() === idealBg) return;
-
-    const choice = this.settings.bgSwapChoice();
-    if (choice === 'always') {
-      this.bgService.name.set(idealBg);
-    } else if (choice === 'ask') {
-      this.bgService.showBgSwapPrompt.set(true);
-    }
   }
 }

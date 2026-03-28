@@ -1,6 +1,5 @@
-import { inject, Injectable, signal } from "@angular/core";
+import { Injectable, signal } from "@angular/core";
 import { RenderStrategy, RenderStrategyType } from "./types";
-import { SettingsService } from "../settings/setting.service";
 import { Subject } from "rxjs";
 
 const availableBackgrounds = [
@@ -10,10 +9,13 @@ const availableBackgrounds = [
   'perlin',
   'snow',
   'shapes',
-  'waves',
-  'voronoi',
-  'hex',
-  'example'
+  'ocean',
+  // 'waves',
+  // 'voronoi',
+  // 'hex',
+  // 'bokeh',
+  // 'caustics',
+  // 'example'
 ] as const;
 
 type BackgroundName = typeof availableBackgrounds[number];
@@ -23,13 +25,16 @@ interface BackgroundEvent {
   data?: unknown | unknown[]
 }
 
+function pickDailyBackground(): BackgroundName {
+  const d = new Date();
+  const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000);
+  return availableBackgrounds[day % availableBackgrounds.length];
+}
+
 @Injectable({ providedIn: 'root'})
 export class BackgroundService {
-  private readonly settings = inject(SettingsService);
-
   readonly strategy = signal<RenderStrategy | null>(null);
-  readonly showBgSwapPrompt = signal(false);
-  readonly name = signal<BackgroundName>(this.settings.effectiveDark() ? 'aurora' : 'particles');
+  readonly name = signal<BackgroundName>(pickDailyBackground());
   readonly availableBackgrounds = [... availableBackgrounds];
 
   setBackground(name: BackgroundName): void {
@@ -85,16 +90,20 @@ export class BackgroundService {
     });
   }
 
+  readonly paused = signal(false);
+
   pause() {
-    this.events$.next({
-      type: 'pause'
-    })
+    this.paused.set(true);
+    this.events$.next({ type: 'pause' });
   }
 
   resume() {
-    this.events$.next({
-      type: 'resume'
-    })
+    this.paused.set(false);
+    this.events$.next({ type: 'resume' });
+  }
+
+  togglePlayback() {
+    this.paused() ? this.resume() : this.pause();
   }
 
   stop() {

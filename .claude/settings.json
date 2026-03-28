@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const fs=require\\(''''fs''''\\); const src=fs.readFileSync\\(''''d:/Github/JelleBruisten-Public/JelleBruisten/node_modules/@angular/ssr/fesm2022/ssr.mjs'''',''''utf8''''\\); const match=src.match\\(/export \\\\{\\([^}]+\\)\\\\}/g\\); if\\(match\\) match.forEach\\(m=>console.log\\(m\\)\\)\")",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "WebFetch(domain:www.shadertoy.com)",
+      "Bash(curl -s -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://www.shadertoy.com/api/v1/shaders/Dl3fRl?key=NtHtMm\")",
+      "Bash(curl -s -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://www.shadertoy.com/view/Dl3fRl\")",
+      "Bash(curl -si -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://www.shadertoy.com/view/Dl3fRl\")"
     ]
   }
 }

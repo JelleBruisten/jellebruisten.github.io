@@ -1,18 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { BackgroundService } from '../../graphics/background.service';
+import { GraphicsRuntime } from '../../graphics/runtime';
 import { SettingsService } from '../../settings/setting.service';
 
 @Component({
   selector: 'app-settings-drawer',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .gear-btn {
+    .open-btn {
       position: fixed;
       bottom: 1.5rem;
       right: 1.5rem;
       z-index: 50;
-      width: 2.75rem;
       height: 2.75rem;
+      padding: 0 0.875rem;
       border-radius: 9999px;
       background: rgba(15,23,42,0.9);
       backdrop-filter: blur(12px);
@@ -21,14 +22,17 @@ import { SettingsService } from '../../settings/setting.service';
       box-shadow: 0 10px 25px rgba(0,0,0,0.4);
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 0.375rem;
       color: rgba(148,163,184,1);
       cursor: pointer;
-      transition: transform 0.15s, color 0.15s;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: color 0.15s;
     }
-    .gear-btn:hover { transform: scale(1.1); color: #fff; }
-    .gear-btn:active { transform: scale(0.95); }
-    .gear-btn:focus-visible { outline: 2px solid oklch(0.62 0.19 272); outline-offset: 2px; }
+    .open-btn:hover { color: #fff; }
+    .open-btn:focus-visible { outline: 2px solid oklch(0.62 0.19 272); outline-offset: 2px; }
     .backdrop {
       position: fixed;
       inset: 0;
@@ -90,40 +94,27 @@ import { SettingsService } from '../../settings/setting.service';
       color: oklch(0.72 0.17 272);
     }
     .opt-btn:focus-visible { outline: 2px solid oklch(0.62 0.19 272); outline-offset: 2px; }
-    .danger-btn {
-      width: 100%;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      border-radius: 0.5rem;
-      background: rgba(239,68,68,0.08);
-      color: rgba(252,165,165,1);
-      border: 1px solid rgba(239,68,68,0.25);
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      font-family: inherit;
-      text-align: left;
-    }
-    .danger-btn:hover { background: rgba(239,68,68,0.18); color: #fff; }
-    .danger-btn:focus-visible { outline: 2px solid rgba(239,68,68,0.7); outline-offset: 2px; }
+    .opt-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   `],
   template: `
-    <!-- Floating gear button -->
-    <button class="gear-btn"
+    <!-- Background name pill — click to open settings -->
+    <button class="open-btn"
       (click)="open.set(!open())"
       [attr.aria-expanded]="open()"
-      [attr.aria-label]="open() ? 'Close settings' : 'Open settings'">
-      @if (!open()) {
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+      [attr.aria-label]="open() ? 'Close settings' : 'Open settings — current background: ' + bgService.name()">
+      @if (open()) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+      } @else {
+        <span>{{ bgService.name() }}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
           <circle cx="12" cy="12" r="3"/>
-        </svg>
-      } @else {
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
         </svg>
       }
     </button>
@@ -157,21 +148,6 @@ import { SettingsService } from '../../settings/setting.service';
           </div>
         </section>
 
-        <!-- Motion -->
-        <section class="section" aria-labelledby="motion-label">
-          <p id="motion-label" class="section-label">Motion</p>
-          <div class="btn-group" role="group" aria-label="Motion preference">
-            @for (opt of motionOpts; track opt.value) {
-              <button
-                [class.active]="settings.motion() === opt.value"
-                class="opt-btn"
-                (click)="settings.motion.set(opt.value)">
-                {{ opt.label }}
-              </button>
-            }
-          </div>
-        </section>
-
         <!-- Background -->
         <section class="section" aria-labelledby="bg-label">
           <p id="bg-label" class="section-label">Background</p>
@@ -192,14 +168,17 @@ import { SettingsService } from '../../settings/setting.service';
           <p id="renderer-label" class="section-label">Renderer</p>
           <div class="btn-group" style="margin-bottom:0.5rem" role="group" aria-label="Graphics API">
             <button [class.active]="bgService.strategy()?.type === 0" class="opt-btn"
+                    [disabled]="!runtime.supportsWebGL()"
                     (click)="bgService.toggleRendering(0)">WebGL</button>
             <button [class.active]="bgService.strategy()?.type === 1" class="opt-btn"
+                    [disabled]="!runtime.supportsWebGPU()"
                     (click)="bgService.toggleRendering(1)">WebGPU</button>
           </div>
           <div class="btn-group" role="group" aria-label="Thread mode">
             <button [class.active]="bgService.strategy()?.offscreenRendering === false" class="opt-btn"
                     (click)="bgService.toggleWebworker(false)">Main</button>
             <button [class.active]="bgService.strategy()?.offscreenRendering === true" class="opt-btn"
+                    [disabled]="!runtime.supportsOffscreen()"
                     (click)="bgService.toggleWebworker(true)">Worker</button>
           </div>
         </section>
@@ -216,18 +195,12 @@ import { SettingsService } from '../../settings/setting.service';
         <section class="section" aria-labelledby="playback-label">
           <p id="playback-label" class="section-label">Playback</p>
           <div class="btn-group">
-            <button class="opt-btn" (click)="bgService.resume()">▶ Play</button>
-            <button class="opt-btn" (click)="bgService.pause()">⏸ Pause</button>
+            <button class="opt-btn" (click)="bgService.togglePlayback()">
+              {{ bgService.paused() ? '▶ Play' : '⏸ Pause' }}
+            </button>
           </div>
         </section>
 
-        <!-- Data -->
-        <section aria-labelledby="data-label">
-          <p id="data-label" class="section-label">Data</p>
-          <button class="danger-btn" (click)="clearData()">
-            Clear all settings &amp; remembered choices
-          </button>
-        </section>
       </div>
     </aside>
   `,
@@ -236,10 +209,7 @@ export class SettingsDrawerComponent {
   protected open = signal(false);
   protected settings = inject(SettingsService);
   protected bgService = inject(BackgroundService);
-
-  protected clearData(): void {
-    this.settings.clearAllData();
-  }
+  protected runtime = inject(GraphicsRuntime);
 
   protected darkOpts = [
     { value: 0, label: 'Auto' },
@@ -247,9 +217,4 @@ export class SettingsDrawerComponent {
     { value: 2, label: 'Dark' },
   ] as const;
 
-  protected motionOpts = [
-    { value: 0, label: 'Auto' },
-    { value: 1, label: 'Reduced' },
-    { value: 2, label: 'Full' },
-  ] as const;
 }

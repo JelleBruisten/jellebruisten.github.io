@@ -54,15 +54,6 @@ export class BackgroundComponent {
       this.programRef?.programHandle?.darkmode(dark);
     });
 
-    effect(() => {
-      const reduced = this.settings.effectiveReducedMotion();
-      if (reduced) {
-        this.programRef?.programHandle?.pause();
-      } else {
-        this.programRef?.programHandle?.resume();
-      }
-    });
-
     this.background.events$.pipe(takeUntilDestroyed()).subscribe((event) => {
       switch(event.type) {
         case "pause": this.programRef?.programHandle?.pause(); break;
@@ -85,9 +76,6 @@ export class BackgroundComponent {
       // never sees a stale ref when it re-runs after the strategy signal changes.
       this.programRef = program;
       this.background.strategy.set(program.strategy);
-      if (untracked(() => this.settings.effectiveReducedMotion())) {
-        program.programHandle?.pause();
-      }
     }
   }
 }
