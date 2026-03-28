@@ -1,13 +1,12 @@
 #version 300 es
 precision mediump float;
 
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
+uniform vec2  u_resolution;
+uniform vec2  u_mouse;
 uniform float u_time;
 uniform float u_darkmode;
 out vec4 fragColor;
 
-// Pseudo-random function
 float random(float seed) {
     return fract(sin(seed) * 43758.545446523);
 }
@@ -16,82 +15,62 @@ float roundedBoxSDF(vec2 p, vec2 size, float radius) {
     return length(max(abs(p) - size + radius, 0.0)) - radius;
 }
 
-float layer(vec2 uv, float iTime, int numShapes, float speed, float sizeFactor, float radiusFactor, float verticalSpacing) {
-    float col = 0.0;
+float layer(vec2 uv, float iTime, int numShapes, float speed, float sizeFactor, float verticalSpacing) {
+    float m = 0.0;
 
     for (int i = 0; i < numShapes; i++) {
-        // seed
-        float randValue = random(float(i)); // Seed the random function with column index
+        float fi   = float(i);
+        float modA = iTime * speed + fi * verticalSpacing + random(fi);
+        float modB = 1.0 + verticalSpacing;
+        float iter = floor(modA / modB);
 
-        // component A and B, we gonna use these for getting the iteration number and xPos
-        float modA = (iTime * speed + float(i) * verticalSpacing + randValue);
-        float modB = (1.0 + verticalSpacing);
-
-        // iteration and xPos
-        float iteration = floor(modA / modB);        
-        float xPos = mix(-0.8, 0.8, random(iteration)); // Map random value to screen width
-
-        // Compute vertical position with continuous looping
+        float xPos      = mix(-0.78, 0.78, random(iter * 3.17 + fi * 0.1));
         float timeOffset = mod(modA, modB);
-        float yPos = -0.5 + timeOffset;
+        float yPos      = -0.55 + timeOffset;
 
-        // Compute visibility factor based on vertical position (fade in and out)
-        float visibility = smoothstep(-0.5, -0.4, yPos) * smoothstep(0.5, 0.4, yPos);
+        float visibility = smoothstep(-0.55, -0.42, yPos) * smoothstep(0.54, 0.40, yPos);
 
-        // Radius increases with height
-        float radius = radiusFactor * (0.05 + yPos * 0.1);
+        // Size variety: small / medium / large driven by per-spawn seed
+        float sizeSeed = random(iter * 2.31 + fi * 0.37);
+        float sc       = (0.030 + sizeSeed * sizeSeed * 0.12) * sizeFactor; // skewed toward small
+        float aspect   = 0.6 + random(iter * 1.71 + fi * 0.53) * 2.0;
+        vec2  baseSize = vec2(sc * aspect, sc);
 
-        // Size of the rounded box
-        vec2 size = vec2(0.1, 0.1) * sizeFactor;
+        // Morph rectangle → circle as shape rises (0 = rect, 1 = circle)
+        float morphT    = smoothstep(-0.55, 0.40, yPos);
+        float targetR   = min(baseSize.x, baseSize.y);
+        vec2  finalSize = mix(baseSize, vec2(targetR, targetR), morphT);
+        float radius    = mix(targetR * 0.15, targetR, morphT);
 
-        // Transform uv to center relative position
-        vec2 p = uv - vec2(xPos, yPos);
-
-        // Compute the distance using roundedBoxSDF
-        float d = roundedBoxSDF(p, size, radius);
-
-        // Accumulate the layer's contribution, modulated by visibility
-        col += visibility * (1.0 - smoothstep(0.0, 0.005, d));
+        float d  = roundedBoxSDF(uv - vec2(xPos, yPos), finalSize, radius);
+        float aa = fwidth(d);
+        m        = max(m, visibility * (1.0 - smoothstep(0.0, aa, d)));
     }
 
-    return col;
-}
-
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    // Normalized UV coordinates
-    vec2 uv = fragCoord / u_resolution.xy; // <0, 1>
-    uv -= 0.5;                           // <-0.5, 0.5>
-    uv.x *= u_resolution.x / u_resolution.y; // Fix aspect ratio
-
-    // Initialize color
-    float col = 0.0;
-
-    // Layer parameters
-    float numLayers = 3.;
-    float opacity = 0.3;
-
-    // Accumulate contributions from each layer
-    for (float i = 0.; i < numLayers; i = i + 1.0) {
-        float speed = 0.2 / (i + 1.0);
-        float size = 0.8 / (i + 1.0);  
-        float radius = 0.8 / (i + 1.0);
-        float spacing = 3.0 / (i + 1.0);       
-        int numShapes = int(floor((numLayers - i) * 2.));
-        col += (layer(uv, u_time + 150.123, numShapes, speed, size, radius, spacing) * opacity);
-    }
-
-    // Output final color
-        
-    fragColor = vec4(
-        // replace this with a color or make it white vec3(1.0)
-        vec3(0.435,0.569,0.886) 
-        //vec3(1.0) 
-
-        // apply the color 
-        * (1.0 - col), 1.0
-    );
+    return m;
 }
 
 void main() {
-  mainImage(fragColor, gl_FragCoord.xy);
+    vec2 uv  = gl_FragCoord.xy / u_resolution.xy - 0.5;
+    uv.x    *= u_resolution.x / u_resolution.y;
+
+    float col = 0.0;
+    for (float i = 0.0; i < 3.0; i += 1.0) {
+        float speed   = 0.20 / (i + 1.0);
+        float size    = 0.90 / (i + 1.0);
+        float spacing = 2.80 / (i + 1.0);
+        int   num     = int(floor((5.0 - i) * 3.0));
+        float weight  = 1.0 - i * 0.15;
+        col = max(col, layer(uv, u_time + 150.123, num, speed, size, spacing) * weight);
+    }
+
+    float darkness   = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
+    vec3  bgDark     = vec3(0.01, 0.02, 0.06);
+    vec3  bgLight    = vec3(0.93, 0.94, 0.97);
+    vec3  shapeDark  = vec3(0.22, 0.38, 0.82);
+    vec3  shapeLight = vec3(0.32, 0.46, 0.78);
+    vec3  bg         = mix(bgLight, bgDark, darkness);
+    vec3  shapeColor = mix(shapeLight, shapeDark, darkness);
+
+    fragColor = vec4(mix(bg, shapeColor, clamp(col, 0.0, 1.0)), 1.0);
 }

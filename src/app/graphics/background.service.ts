@@ -1,9 +1,10 @@
-import { computed, effect, inject, Injectable, linkedSignal, signal } from "@angular/core";
+import { inject, Injectable, signal } from "@angular/core";
 import { RenderStrategy, RenderStrategyType } from "./types";
+import { SettingsService } from "../settings/setting.service";
 import { Subject } from "rxjs";
 
 const availableBackgrounds = [
-  'example', 'snow', 'dots', 'shapes', 'perlin'
+  'aurora', 'perlin', 'snow', 'shapes', 'particles', 'waves', 'voronoi', 'hex', 'example'
 ] as const;
 
 type BackgroundName = typeof availableBackgrounds[number];
@@ -15,9 +16,16 @@ interface BackgroundEvent {
 
 @Injectable({ providedIn: 'root'})
 export class BackgroundService {
+  private readonly settings = inject(SettingsService);
+
   readonly strategy = signal<RenderStrategy | null>(null);
-  readonly name = signal<BackgroundName>('perlin');
+  readonly showBgSwapPrompt = signal(false);
+  readonly name = signal<BackgroundName>(this.settings.effectiveDark() ? 'aurora' : 'perlin');
   readonly availableBackgrounds = [... availableBackgrounds];
+
+  setBackground(name: BackgroundName): void {
+    this.name.set(name);
+  }
   readonly events$ = new Subject<BackgroundEvent>();
 
   toggleRendering(type?: RenderStrategyType) {

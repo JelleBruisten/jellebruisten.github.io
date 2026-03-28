@@ -11,12 +11,12 @@ import { SettingsService } from "../settings/setting.service";
   selector: 'app-background',
   template: ``,
   host: {
-    'class': 'fixed z-0'
+    'style': 'position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;'
   }
 })
 export class BackgroundComponent {
   private readonly host = inject(ElementRef);
-  private readonly programManager = inject(BackgroundProgramManager);  
+  private readonly programManager = inject(BackgroundProgramManager);
   private readonly background = inject(BackgroundService);
   private readonly settings = inject(SettingsService);
   private programRef: ProgramRef | null = null;
@@ -28,13 +28,13 @@ export class BackgroundComponent {
     // handle resize
     const document = inject(DOCUMENT);
     const window = document.defaultView as Window;
-    fromEvent(window, 'resize').pipe(takeUntilDestroyed()).subscribe(() => {     
+    fromEvent(window, 'resize').pipe(takeUntilDestroyed()).subscribe(() => {
       this.programRef?.programHandle?.resize(window.innerWidth, window.innerHeight)
     });
 
     const body = document.body;
     // prevent mouse movement events effecting the background if reduced motion is on
-    fromEvent<MouseEvent>(body, 'mousemove').pipe(filter(() => !this.settings.effectiveReducedMotion()), takeUntilDestroyed()).subscribe((event) => {     
+    fromEvent<MouseEvent>(body, 'mousemove').pipe(filter(() => !this.settings.effectiveReducedMotion()), takeUntilDestroyed()).subscribe((event) => {
       // correct mouse position based on boundingRect
       const rect = body.getBoundingClientRect();
 
@@ -72,9 +72,9 @@ export class BackgroundComponent {
 
   async start(name: string, renderStrategy?: RenderStrategy | null) {
     const program = await this.programManager.startProgram(name, renderStrategy, this.settings.effectiveSettings());
-    if(program) {          
+    if(program) {
       const canvas = program.canvas;
-      (this.host.nativeElement as HTMLElement).replaceChildren(canvas);  
+      (this.host.nativeElement as HTMLElement).replaceChildren(canvas);
       this.background.strategy.set(program.strategy);
       this.programRef = program;
     }

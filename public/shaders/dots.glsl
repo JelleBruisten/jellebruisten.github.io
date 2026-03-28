@@ -110,7 +110,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         m += layer(uv * size + i * 15. + mouse) * fade;
     }
     
-    vec3 col = abs(vec3(u_darkmode) - mix(vec3(0.), vec3(0.3), vec3(m)));
+    float brightLevel = (u_darkmode - 0.2) / (1.0 - 0.2);
+    vec3 darkColor = mix(vec3(0.), vec3(0.3), vec3(m));  // Dark mode color
+    vec3 whiteColor = abs(vec3(1.) - darkColor);  // White mode color
+
+    // Smoothly interpolate between the two based on u_darkmode
+    vec3 col = mix(darkColor, whiteColor, brightLevel);
 
 
     // Output to screen

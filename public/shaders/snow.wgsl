@@ -41,7 +41,10 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let _BlizardFactor: f32 = 0.2;
     var uv = fragCoord.xy / uniforms.iResolution.x; // Normalize fragCoord.xy to UV space
 
-    var fragColor = vec4<f32>(0.808, 0.89, 0.918, 1.0);
+    let darkness = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
+    let bgLight = vec3f(0.808, 0.890, 0.918);
+    let bgDark  = vec3f(0.06,  0.10,  0.22);
+    var fragColor = vec4<f32>(mix(bgLight, bgDark, darkness), 1.0);
     let totalSnowflakes = 200;
     var j: f32;
 

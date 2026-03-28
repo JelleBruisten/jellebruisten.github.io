@@ -107,8 +107,13 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
         m = m + layer(uv * size + i * 15.0 + mouse) * fade;
     }
 
+    // Remap u_darkmode from [0.2, 1.0] to [0.0, 1.0]
+    let brightLevel = (uniforms.iDarkmode - 0.2) / (1.0 - 0.2);
 
-    let col = abs(vec3<f32>(uniforms.iDarkmode) - mix(vec3<f32>(0.0), vec3<f32>(0.3), vec3<f32>(m)));
+    let darkColor = mix(vec3<f32>(0.0), vec3<f32>(0.3), vec3<f32>(m));
+    let whiteColor = abs(vec3<f32>(uniforms.iDarkmode) - darkColor);
+
+    let col = mix(darkColor, whiteColor, brightLevel);
 
         // Output to screen
     return vec4f(col, 1.0);

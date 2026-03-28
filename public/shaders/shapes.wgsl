@@ -1,32 +1,21 @@
 @vertex fn vs(
-  @builtin(vertex_index) vertexIndex : u32
+  @builtin(vertex_index) vertexIndex: u32
 ) -> @builtin(position) vec4f {
   let pos = array(
-    vec2f( -1.0,  -1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( -1.0, 1.0), 
-
-    vec2f( -1.0,  1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( 1.0, 1.0) 
+    vec2f(-1.0, -1.0), vec2f( 1.0, -1.0), vec2f(-1.0,  1.0),
+    vec2f(-1.0,  1.0), vec2f( 1.0, -1.0), vec2f( 1.0,  1.0)
   );
-
   return vec4f(pos[vertexIndex], 0.0, 1.0);
 }
 
-// Uniform Structure
 struct Uniforms {
-    iResolution: vec2f, // Screen resolution
-    iTime: f32,         // Time
+    iResolution: vec2f,
+    iTime: f32,
     iDarkmode: f32,
-    iMouse: vec2f       // Mouse position
+    iMouse: vec2f
 }
-
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
-
-
-// Layer function
 fn random(seed: f32) -> f32 {
     return fract(sin(seed) * 43758.545446523);
 }
@@ -35,82 +24,69 @@ fn roundedBoxSDF(p: vec2f, size: vec2f, radius: f32) -> f32 {
     return length(max(abs(p) - size + radius, vec2f(0.0))) - radius;
 }
 
-fn modf(x: f32, y: f32) -> f32 {
+fn modf_custom(x: f32, y: f32) -> f32 {
     return x - y * floor(x / y);
 }
 
-fn layer(
-    uv: vec2f,
-    iTime: f32,
-    numShapes: i32,
-    speed: f32,
-    sizeFactor: f32,
-    radiusFactor: f32,
-    verticalSpacing: f32,
-) -> f32 {
-    var col: f32 = 0.0;
+fn layer(uv: vec2f, iTime: f32, numShapes: i32, speed: f32, sizeFactor: f32, verticalSpacing: f32) -> f32 {
+    var m: f32 = 0.0;
 
-    for (var i: i32 = 0; i < numShapes; i = i + 1) {
-        // seed
-        let randValue = random(f32(i));
+    for (var i: i32 = 0; i < numShapes; i++) {
+        let fi   = f32(i);
+        let modA = iTime * speed + fi * verticalSpacing + random(fi);
+        let modB = 1.0 + verticalSpacing;
+        let iter = floor(modA / modB);
 
-        // component A and B, we gonna use these for getting the iteration number and xPos
-        let modA = (iTime * speed + f32(i) * verticalSpacing + randValue);
-        let modB = (1.0 + verticalSpacing);
+        let xPos       = mix(-0.78, 0.78, random(iter * 3.17 + fi * 0.1));
+        let timeOffset = modf_custom(modA, modB);
+        let yPos       = -0.55 + timeOffset;
 
-        // iteration and xPos
-        let iteration = floor(modA / modB);
-        let xPos = mix(-0.8, 0.8, random(iteration));
+        let visibility = smoothstep(-0.55, -0.42, yPos) * smoothstep(0.54, 0.40, yPos);
 
-        // Compute vertical position with continuous looping
-        let timeOffset = modf(modA, modB);
-        let yPos = -0.5 + timeOffset;
+        // Size variety: small / medium / large
+        let sizeSeed = random(iter * 2.31 + fi * 0.37);
+        let sc       = (0.030 + sizeSeed * sizeSeed * 0.12) * sizeFactor;
+        let aspect   = 0.6 + random(iter * 1.71 + fi * 0.53) * 2.0;
+        let baseSize = vec2f(sc * aspect, sc);
 
-        let visibility = smoothstep(-0.5, -0.4, yPos) * (1.0 - smoothstep(0.4, 0.5, yPos));
+        // Morph rectangle → circle as shape rises
+        let morphT    = smoothstep(-0.55, 0.40, yPos);
+        let targetR   = min(baseSize.x, baseSize.y);
+        let finalSize = mix(baseSize, vec2f(targetR, targetR), morphT);
+        let radius    = mix(targetR * 0.15, targetR, morphT);
 
-        let radius = radiusFactor * (0.05 + yPos * 0.1);
-
-        let size = vec2f(0.1, 0.1) * sizeFactor;
-
-        // adding p = uv + vec2f(x, y) instead of substracting since coordinates are different in WGSL vs GLSL
-        // and flip the xCoordinate to align with how it works in glsl
+        // WGSL: y axis is flipped vs GLSL — negate yPos for the SDF center
         let p = uv + vec2f(-xPos, yPos);
-
-        let d = roundedBoxSDF(p, size, radius);
-
-        col = col + visibility * (1.0 - smoothstep(0.0, 0.005, d));
+        let d = roundedBoxSDF(p, finalSize, radius);
+        let aa = fwidth(d);
+        m = max(m, visibility * (1.0 - smoothstep(0.0, aa, d)));
     }
 
-    return col;
+    return m;
 }
 
 @fragment
 fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
-    // Normalize pixel coordinates (from 0 to 1)
-    var uv = fragCoord.xy / uniforms.iResolution;
-    uv = uv - vec2f(0.5);
-    uv.x = uv.x * (uniforms.iResolution.x / uniforms.iResolution.y);
+    var uv = fragCoord.xy / uniforms.iResolution - vec2f(0.5);
+    uv.x  *= uniforms.iResolution.x / uniforms.iResolution.y;
 
-    // Initialize color
     var col: f32 = 0.0;
-
-     // Layer parameters
-    let numLayers = 3.0;
-    let opacity = 0.3;
-
-    // Accumulate contributions from each layer
-    for (var i: f32 = 0.0; i < numLayers; i = i + 1.0) {
-        let speed = 0.2 / (i + 1.0);
-        let size = 0.8 / (i + 1.0);
-        let radius = 0.8 / (i + 1.0);
-        let spacing = 3.0 / (i + 1.0);
-        let numShapes = i32(floor((numLayers - i) * 2.0));
-        col = col + (layer(uv, uniforms.iTime + 150.123, numShapes, speed, size, radius, spacing) * opacity);
+    for (var i: f32 = 0.0; i < 3.0; i += 1.0) {
+        let speed   = 0.20 / (i + 1.0);
+        let size    = 0.90 / (i + 1.0);
+        let spacing = 2.80 / (i + 1.0);
+        let num     = i32(floor((5.0 - i) * 3.0));
+        let weight  = 1.0 - i * 0.15;
+        col = max(col, layer(uv, uniforms.iTime + 150.123, num, speed, size, spacing) * weight);
     }
 
-    // Apply color and return output
-    let color = vec3f(0.435, 0.569, 0.886) * (1.0 - col);
+    let darkness   = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
+    let bgDark     = vec3f(0.01, 0.02, 0.06);
+    let bgLight    = vec3f(0.93, 0.94, 0.97);
+    let shapeDark  = vec3f(0.22, 0.38, 0.82);
+    let shapeLight = vec3f(0.32, 0.46, 0.78);
+    let bg         = mix(bgLight, bgDark, darkness);
+    let shapeColor = mix(shapeLight, shapeDark, darkness);
 
-    return vec4f(color, 1.0);
+    return vec4f(mix(bg, shapeColor, clamp(col, 0.0, 1.0)), 1.0);
 }
-

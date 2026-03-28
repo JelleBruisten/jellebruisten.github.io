@@ -71,14 +71,12 @@ fn fs(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
     let f = sin(32.0 * tetraNoise(p));
     let weight = clamp(1.5 - 0.5 * abs(f) / fwidth(f), 0.0, 1.0);
 
-    let c1 = vec3<f32>(0.8);
-    let c2 = vec3<f32>(1.0);
-
-    let color = mix(
-        vec4<f32>(c1 * uniforms.iDarkmode, 1.0),
-        vec4<f32>(c2 * uniforms.iDarkmode, 1.0),
-        weight
-    );
-
-    return vec4<f32>(color);    
+    let darkness  = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
+    let bgDark    = vec3f(0.01,  0.02,  0.06);
+    let bgLight   = vec3f(0.93,  0.94,  0.96);
+    let lineDark  = vec3f(0.10,  0.14,  0.28);
+    let lineLight = vec3f(0.48,  0.52,  0.68);
+    let bg   = mix(bgLight,   bgDark,   darkness);
+    let line = mix(lineLight, lineDark, darkness);
+    return vec4f(mix(bg, line, weight), 1.0);
 }

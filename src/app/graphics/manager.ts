@@ -38,8 +38,7 @@ export class BackgroundProgramManager {
 
   private async startProgramHelper(name: string, renderStrategy: RenderStrategy, settings?: Settings) {
     if(this.currentProgram && this.currentProgram.name === name && this.currentProgram.strategy.offscreenRendering === renderStrategy.offscreenRendering && this.currentProgram.strategy.type == renderStrategy.type) {
-      console.warn(`Tried to start program with same name, offscreenRendering and driver`);
-      return;
+      return this.currentProgram;
     }
 
     this.currentProgram?.destroy();
@@ -48,7 +47,10 @@ export class BackgroundProgramManager {
     const canvas = this.document.createElement('canvas');
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
-    canvas.style.pointerEvents = 'auto'
+    canvas.style.display = 'block';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
 
     // program handles/worker references
     let programHandles: RenderProgramHandles | null = null;    

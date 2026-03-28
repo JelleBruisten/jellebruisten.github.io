@@ -11,11 +11,15 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist/jelle-bruisten",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "server": "src/main.server.ts",
+            "prerender": {
+              "routesFile": "routes.txt"
+            },
             "polyfills": [
               "zone.js"
             ],
@@ -37,13 +41,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"
@@ -57,7 +61,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "JelleBruisten:build:production"
@@ -69,12 +73,12 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n"
+          "builder": "@angular/build:extract-i18n"
         }
       }
     }
   },
   "cli": {
-    "analytics": "f1f275b2-23bc-44f5-9e63-4499953745df"
+    "analytics": false
   }
 }

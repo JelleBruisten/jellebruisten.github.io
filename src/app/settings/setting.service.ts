@@ -24,19 +24,19 @@ export class SettingsService {
   private readonly document = inject(DOCUMENT);
 
   // motion
-  readonly motion = signal<MotionPreference>(MotionPreference.Auto);
+  readonly motion = signal<MotionPreference>(MotionPreference.Reduced);
   readonly effectiveReducedMotion = computed(() => {
     const motion = this.motion();
     switch(motion) {
       case MotionPreference.Reduced:
         return true;
       case MotionPreference.NoPreference:
-        return false;        
+        return false;
 
       case MotionPreference.Auto:
       default:
         const window = this.document.defaultView;
-        const prefersReduced = window?.matchMedia('(prefers-reduced-motion)')?.matches;
+        const prefersReduced = window?.matchMedia?.('(prefers-reduced-motion)')?.matches;
         return !!prefersReduced;
     }
   })
@@ -54,17 +54,36 @@ export class SettingsService {
         case DarkPreference.Dark:
           return true;
         case DarkPreference.Light:
-          return false;        
-  
+          return false;
+
         case DarkPreference.Auto:
         default:
           const window = this.document.defaultView;
-          const prefersDarkMode = window?.matchMedia('(prefers-color-scheme: dark)')?.matches ?? false;
+          const prefersDarkMode = window?.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
           return prefersDarkMode;
-      } 
+      }
     }
     return isDark(darkPreference) ? darkModeColor : lightModeColor;
-  });   
+  });
+
+  readonly showFps = signal(false);
+
+  readonly bgSwapChoice = signal<'ask' | 'always' | 'never'>(
+    (this.document.defaultView?.localStorage?.getItem('bgSwapChoice') as 'ask' | 'always' | 'never') ?? 'ask'
+  );
+
+  setBgSwapChoice(choice: 'ask' | 'always' | 'never'): void {
+    this.bgSwapChoice.set(choice);
+    this.document.defaultView?.localStorage?.setItem('bgSwapChoice', choice);
+  }
+
+  clearAllData(): void {
+    this.document.defaultView?.localStorage?.clear();
+    this.dark.set(DarkPreference.Auto);
+    this.motion.set(MotionPreference.Reduced);
+    this.showFps.set(false);
+    this.bgSwapChoice.set('ask');
+  }
 
   readonly effectiveSettings = computed(() => {
     return {
@@ -81,6 +100,6 @@ export class SettingsService {
         'dark',
         this.effectiveDark()
       )
-    });    
+    });
   }
 }

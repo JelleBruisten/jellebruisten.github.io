@@ -4,6 +4,7 @@ precision mediump float;
 out vec4 fragColor;  // Output fragment color
 uniform highp vec2 u_resolution;  // Screen resolution
 uniform float u_time;       // Time variable for animations
+uniform float u_darkmode;
 
 #define _BlizardFactor 0.2
 
@@ -23,7 +24,10 @@ void main()
 {
     uv = gl_FragCoord.xy / u_resolution.x;
     
-    fragColor = vec4(0.808, 0.89, 0.918, 1.0);
+    float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
+    vec3 bgLight = vec3(0.808, 0.890, 0.918);
+    vec3 bgDark  = vec3(0.06,  0.10,  0.22);
+    fragColor = vec4(mix(bgLight, bgDark, darkness), 1.0);
     int totalSnowflakes = 200;
     float j;    
     for(int i=0; i< totalSnowflakes; i++)

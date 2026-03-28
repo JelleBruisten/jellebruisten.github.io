@@ -41,17 +41,14 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) //Meta-structure adapted
     float f = sin(32.*tetraNoise(p));
     float weight =  clamp( 1.5-.5*abs(f)/fwidth(f),0.,1.);
 
-    vec3 c1 = vec3(0.8);
-    vec3 c2 = vec3(1.0);
-    fragColor = abs(
-      mix(
-                              vec4(c1 * u_darkmode, 1),
-                              vec4(c2 * u_darkmode, 1),
-                              weight
-                          )
-    );
-
-    fragColor.xyz = fragColor.xyz;
+    float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
+    vec3 bgDark    = vec3(0.01,  0.02,  0.06);
+    vec3 bgLight   = vec3(0.93,  0.94,  0.96);
+    vec3 lineDark  = vec3(0.10,  0.14,  0.28);
+    vec3 lineLight = vec3(0.48,  0.52,  0.68);
+    vec3 bg   = mix(bgLight,   bgDark,   darkness);
+    vec3 line = mix(lineLight, lineDark, darkness);
+    fragColor = vec4(mix(bg, line, weight), 1.0);
 }
 
 void main() {
