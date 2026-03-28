@@ -32,7 +32,7 @@ fn drawCircle(center: vec2<f32>, radius: f32, uv: vec2<f32>) -> f32 {
    return 1.0 - smoothstep(0.0, radius, length(uv - center));
 }
 
-fn modf(x: f32, y: f32) -> f32 {
+fn fmod(x: f32, y: f32) -> f32 {
     return x - y * floor(x / y);
 }
 
@@ -51,9 +51,10 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     for (var i: i32 = 0; i < totalSnowflakes; i++) {
         j = f32(i);
         let speed = 0.3 + rnd(cos(j)) * (0.7 + 0.5 * cos(j / (f32(totalSnowflakes) * 0.25)));
+        let yRange = uniforms.iResolution.y / uniforms.iResolution.x;
         let center = vec2<f32>(
             (0.25 - uv.y) * _BlizardFactor + rnd(j) + 0.1 * cos(uniforms.iTime + sin(j)),
-            modf(sin(j) + speed * (uniforms.iTime * 1.5 * (0.1 + _BlizardFactor)), 0.65)
+            fmod(sin(j) + speed * (uniforms.iTime * 1.5 * (0.1 + _BlizardFactor)), yRange)
         );
         let radius = 0.00001 + speed * 0.012;
         fragColor += vec4<f32>(0.09 * drawCircle(center, radius, uv));

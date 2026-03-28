@@ -1,5 +1,5 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 
 out vec4 fragColor;  // Output fragment color
 uniform highp vec2 u_resolution;  // Screen resolution
@@ -34,7 +34,8 @@ void main()
     {
         j = float(i);
         float speed = 0.3+rnd(cos(j))*(0.7+0.5*cos(j/(float(totalSnowflakes)*0.25)));
-        vec2 center = vec2((0.25-uv.y)*_BlizardFactor+rnd(j)+0.1*cos(u_time+sin(j)), mod(sin(j)-speed*(u_time*1.5*(0.1+_BlizardFactor)), 0.65));
+        float yRange = u_resolution.y / u_resolution.x;
+        vec2 center = vec2((0.25-uv.y)*_BlizardFactor+rnd(j)+0.1*cos(u_time+sin(j)), mod(sin(j)-speed*(u_time*1.5*(0.1+_BlizardFactor)), yRange));
         fragColor += vec4(0.09*drawCircle(center, 0.001+speed*0.012));
     }
 }

@@ -1,5 +1,5 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
@@ -38,7 +38,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) //Meta-structure adapted
 {
     vec2 p =  (fragCoord.xy*2.5 - u_resolution.xy) / 
               (u_resolution.y/2.0 + u_resolution.x/2.0);// Convert Coords
-    float f = sin(32.*tetraNoise(p));
+    float freq = u_resolution.x < 400.0 ? 16.0 : 32.0;
+    float f = sin(freq * tetraNoise(p));
     float weight =  clamp( 1.5-.5*abs(f)/fwidth(f),0.,1.);
 
     float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
