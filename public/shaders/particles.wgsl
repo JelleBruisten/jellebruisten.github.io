@@ -32,7 +32,7 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let bg       = mix(bgLight, bgDark, darkness);
     let ink      = mix(inkLight, inkDark, darkness);
 
-    let N    = 36;
+    let N    = select(18, 36, uniforms.iResolution.x >= 768.0);
     let CONN = 0.28f;
 
     var p: array<vec2f, 36>;

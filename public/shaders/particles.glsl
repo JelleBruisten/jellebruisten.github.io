@@ -22,7 +22,7 @@ void main() {
     vec3  bg       = mix(bgLight, bgDark, darkness);
     vec3  ink      = mix(inkLight, inkDark, darkness);
 
-    const int   N    = 36;
+    int         N    = u_resolution.x >= 768.0 ? 36 : 18;
     const float CONN = 0.28;
 
     vec2 p[36];
