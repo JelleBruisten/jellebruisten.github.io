@@ -1,162 +1,306 @@
 ---
-title: "Taming RxJS: Subscription Management in Angular"
+title: "RxJS Subscriptions in Angular: Stop Leaking, Start Thinking Reactively"
 date: "2025-12-05"
-description: "Memory leaks from forgotten RxJS subscriptions are a classic Angular pitfall. Here are the patterns — old and new — that will save you from them."
+description: "From async pipe to takeUntilDestroyed: a practical guide to every subscription pattern in modern Angular, with the pitfalls nobody warns you about."
 tags: ["angular", "rxjs", "typescript"]
 ---
 
-# Taming RxJS: Subscription Management in Angular
+Memory leaks from forgotten subscriptions are one of the most common Angular bugs, and one of the quietest. No error is thrown. The component disappears from the DOM. But somewhere, an observable is still firing, updating state that no longer exists, or holding references that prevent garbage collection.
 
-Every Angular developer has run into it: a component is destroyed, but somewhere an observable is still pushing values into the void — or worse, into a component whose host element no longer exists. Memory leaks, stale state, double-fired effects. RxJS subscriptions that aren't cleaned up are a silent menace.
+In a long-running SPA it compounds: every navigation to a route creates another subscription, and another. You end up with ten listeners where you expected one.
 
-Let's look at the patterns that fix it.
+Modern Angular gives you great tools to avoid all of this. But first, a principle worth internalising:
 
-## The Problem
+> **The best subscription is one you never create.**
+
+## Don't Subscribe: Declare
+
+Before reaching for `.subscribe()`, ask whether Angular can own the subscription for you. Usually it can.
+
+### The `async` Pipe
+
+The `async` pipe subscribes when the component is created and unsubscribes when it's destroyed, automatically, with zero lifecycle hooks:
+
+```typescript
+@Component({
+  template: `
+    @if (user$ | async; as user) {
+      <h1>Hello, {{ user.name }}</h1>
+    }
+  `
+})
+export class ProfileComponent {
+  protected user$ = inject(UserService).currentUser$;
+}
+```
+
+No `ngOnInit`. No `ngOnDestroy`. No subscription variable. This is the baseline declarative approach and works perfectly with `OnPush`: Angular triggers change detection every time the pipe receives a new value.
+
+### `toSignal()`
+
+When you need the value in component logic (not just the template), `toSignal` bridges RxJS and signals:
 
 ```typescript
 @Component({ ... })
-export class SearchComponent implements OnInit {
-  results: SearchResult[] = [];
+export class DashboardComponent {
+  private userService = inject(UserService);
 
-  ngOnInit() {
-    // This subscription lives forever — it's never unsubscribed
-    this.searchService.query$.subscribe(results => {
-      this.results = results;
-    });
-  }
+  protected user = toSignal(this.userService.currentUser$);
+  protected stats = toSignal(this.userService.stats$, { initialValue: [] });
+
+  // Works like any signal in computed / effects
+  protected greeting = computed(() => `Hello, ${this.user()?.name ?? 'stranger'}`);
 }
 ```
 
-When `SearchComponent` is destroyed, the subscription keeps running. If `query$` emits later, it tries to update a dead component. In a long-running SPA this compounds: every time the component is created, another subscription is added to the pile.
+`toSignal` creates the subscription inside the injection context and cleans it up with the component. Unlike the `async` pipe, the value is available as a plain signal anywhere in the class with no pipe syntax needed.
 
-## Pattern 1: Unsubscribe in `ngOnDestroy`
+**`async` pipe vs `toSignal`:** use `async` when the observable is only consumed in the template, particularly with `@if` or `@for`. Use `toSignal` when you need the value in computed logic or side effects too.
 
-The baseline approach:
+## Pattern 1: `takeUntilDestroyed`
 
-```typescript
-export class SearchComponent implements OnInit, OnDestroy {
-  private sub: Subscription | null = null;
-
-  ngOnInit() {
-    this.sub = this.searchService.query$.subscribe(r => this.results = r);
-  }
-
-  ngOnDestroy() {
-    this.sub?.unsubscribe();
-    this.sub = null;
-  }
-}
-```
-
-Works, but verbose. Starting with `null` makes it clear no subscription exists yet, and resetting to `null` after unsubscribing prevents accidental reuse of a dead subscription.
-
-## Pattern 2: Composing with `new Subscription`
-
-When you have multiple subscriptions to manage together, `new Subscription()` lets you add child subscriptions via `.add()` and dispose them all at once:
-
-```typescript
-export class SearchComponent implements OnInit, OnDestroy {
-  private subs = new Subscription();
-
-  ngOnInit() {
-    this.subs.add(this.searchService.query$.subscribe(r => this.results = r));
-    this.subs.add(this.otherService.data$.subscribe(d => this.data = d));
-  }
-
-  ngOnDestroy() {
-    this.subs.unsubscribe();
-  }
-}
-```
-
-Each `.add()` call registers a child subscription. When the parent is unsubscribed, all children are too. No third-party utilities needed.
-
-## Pattern 3: `takeUntil` with a Destroy Subject
-
-A popular functional pattern using an RxJS operator:
-
-```typescript
-export class SearchComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  ngOnInit() {
-    this.searchService.query$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(r => this.results = r);
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-}
-```
-
-`takeUntil` completes the observable when `destroy$` emits, which automatically unsubscribes. More declarative, though it requires the boilerplate subject.
-
-## Pattern 4: `takeUntilDestroyed` — the Modern Way
-
-Angular 16 introduced `takeUntilDestroyed`, which hooks into the component's destroy lifecycle automatically:
+When you genuinely need to subscribe imperatively, for side effects, DOM coordination, or complex operator chains, `takeUntilDestroyed` is the modern answer:
 
 ```typescript
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({ ... })
 export class SearchComponent {
-  constructor() {
-    this.searchService.query$
-      .pipe(takeUntilDestroyed())
-      .subscribe(r => this.results = r);
+  private results = signal<SearchResult[]>([]);
+
+  constructor(private api: SearchService) {
+    inject(ActivatedRoute).queryParams.pipe(
+      map(p => p['q'] ?? ''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => api.search(query)),
+      takeUntilDestroyed()
+    ).subscribe(results => this.results.set(results));
   }
 }
 ```
 
-No `ngOnDestroy`. No subject. The `DestroyRef` is injected automatically when called inside an injection context (constructor or field initialiser). This is the recommended approach as of Angular 17+.
-
-You can also use it outside the constructor by passing a `DestroyRef` explicitly:
+`takeUntilDestroyed()` hooks into `DestroyRef` automatically. No subject, no lifecycle method. Call it inside an injection context (constructor or field initialiser). If you need it elsewhere, pass the ref explicitly:
 
 ```typescript
-class MyService {
-  constructor(private destroyRef: DestroyRef) {
-    someObs$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(...);
+class AnalyticsService {
+  private destroyRef = inject(DestroyRef);
+
+  startTracking() {
+    interval(5000).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.flush());
   }
 }
 ```
 
-## When Signals Are Better
+## The Nested Subscription Antipattern
 
-If you're reading an observable's latest value in a template, converting it to a signal with `toSignal` is often cleaner:
+This is the mistake that causes the most subtle bugs, and it's rarely discussed:
 
 ```typescript
-// Instead of:
+// ❌ Never subscribe inside subscribe
 ngOnInit() {
-  this.userSub = this.userService.user$.subscribe(u => this.user = u);
+  this.route.params.subscribe(params => {
+    this.api.getUser(params['id']).subscribe(user => {
+      this.user = user;
+    });
+  });
 }
-
-// Do:
-protected user = toSignal(this.userService.user$, { initialValue: null });
 ```
 
-`toSignal` handles the subscription and automatic cleanup internally. The template binds to a signal rather than a property, which also enables fine-grained change detection.
+If `route.params` emits three times (user navigates back and forward), you now have **three active HTTP subscriptions** all racing to update the same property. Each navigation adds another layer. Even if the HTTP observable completes, the outer subscription is still leaking.
 
-## The Rule of Thumb
+Fix this with a **flattening operator**:
 
-**Let Angular clean up for you** when you can:
+```typescript
+// ✅ switchMap cancels the previous inner observable on each new emission
+constructor() {
+  inject(ActivatedRoute).params.pipe(
+    map(p => p['id']),
+    switchMap(id => this.api.getUser(id)),
+    takeUntilDestroyed()
+  ).subscribe(user => this.user.set(user));
+}
+```
 
-| Where | Use |
+`switchMap` cancels the in-flight HTTP request when a new route param arrives. One active subscription, correct semantics, no race conditions.
+
+The choice of flattening operator carries meaning; pick the wrong one and the bug is subtle:
+
+| Operator | Behaviour | When to use |
+|---|---|---|
+| `switchMap` | Cancel previous on new emission | Search, navigation, autocomplete |
+| `concatMap` | Queue, wait for previous to complete | Ordered saves, sequential requests |
+| `mergeMap` | Allow concurrent inner observables | Parallel, independent requests |
+| `exhaustMap` | Ignore new while inner is active | Submit buttons, preventing double-send |
+
+## `takeUntil` Operator Ordering
+
+When using `takeUntil` manually, position matters. Operators placed **after** `takeUntil` can still fire after the subject emits, including `retry`, which will resubscribe:
+
+```typescript
+// ❌ retry runs after takeUntil — can resubscribe after component destroy
+obs$.pipe(
+  takeUntil(destroy$),
+  retry(3)
+)
+
+// ✅ takeUntil last, cleanup always wins
+obs$.pipe(
+  retry(3),
+  takeUntil(destroy$)
+)
+```
+
+The same applies to `takeUntilDestroyed`. Keep it as the **last operator** before `.subscribe()`.
+
+## NgRx Store and SignalStore
+
+In real-world applications, HTTP requests rarely go directly into a component. State lives in a store, and components read from it. This changes the subscription picture entirely: **the component subscribes to nothing**. The store owns the lifecycle.
+
+### NgRx Store (selector to signal)
+
+```typescript
+@Component({ ... })
+export class UserProfileComponent {
+  private store = inject(Store);
+
+  // selectSignal returns a Signal<T>, auto-cleaned up
+  protected user    = this.store.selectSignal(selectCurrentUser);
+  protected loading = this.store.selectSignal(selectUserLoading);
+  protected error   = this.store.selectSignal(selectUserError);
+
+  load(id: string) {
+    this.store.dispatch(UserActions.load({ id }));
+  }
+}
+```
+
+The subscription is buried inside the store infrastructure. Your component dispatches actions and reads signals. No cleanup required.
+
+### NgRx SignalStore
+
+SignalStore takes this further: the store itself is signal-native.
+
+```typescript
+export const UserStore = signalStore(
+  withState({ user: null as User | null, loading: false }),
+  withMethods((store, api = inject(UserService)) => ({
+    load: rxMethod<string>(
+      pipe(
+        switchMap(id => api.getUser(id)),
+        tapResponse({
+          next: user => patchState(store, { user, loading: false }),
+          error: ()  => patchState(store, { loading: false })
+        })
+      )
+    )
+  }))
+);
+
+@Component({
+  providers: [UserStore],
+  ...
+})
+export class UserProfileComponent {
+  protected store = inject(UserStore);
+  // store.user(), store.loading() are plain signals
+}
+```
+
+`rxMethod` inside SignalStore manages its own subscription and cleans up when the store (or providing component) is destroyed. The component never calls `.subscribe()`.
+
+### When the store doesn't help
+
+State management is the right home for HTTP, but not for everything. Subscriptions you still handle yourself:
+
+- **Router params / query params:** scoped to one component, no shared state needed
+- **Form value changes:** `valueChanges` tied to a form's lifetime
+- **DOM events:** `fromEvent`, `ResizeObserver`, `IntersectionObserver`
+- **WebSocket streams:** unless you're pushing events into the store
+
+For these, `takeUntilDestroyed()` remains the right tool.
+
+## `rxResource` — Experimental
+
+Angular 19 added `rxResource` as a signal-based abstraction for local async loading. It's worth knowing it exists, but it's still marked **experimental** and the API may change:
+
+```typescript
+// ⚠️ Experimental API, check Angular release notes before using in production
+import { rxResource } from '@angular/core/rxjs-interop';
+
+protected userResource = rxResource({
+  request: () => ({ id: this.userId() }),
+  loader: ({ request }) => inject(UserService).getUser(request.id)
+});
+```
+
+It handles loading state, cancellation, and cleanup automatically. If you're building a small component without a store and want a self-contained loading pattern, it's promising. Just track its stability status before committing to it in production.
+
+## Direct Cleanup with `DestroyRef`
+
+For non-observable resources like `setInterval`, WebSocket connections, and third-party listeners, use `DestroyRef.onDestroy` directly:
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class WebSocketService {
+  private destroyRef = inject(DestroyRef);
+
+  connect(url: string) {
+    const ws = new WebSocket(url);
+
+    this.destroyRef.onDestroy(() => {
+      ws.close();
+    });
+
+    return fromEvent<MessageEvent>(ws, 'message').pipe(
+      map(e => JSON.parse(e.data))
+    );
+  }
+}
+```
+
+This is the low-level primitive that `takeUntilDestroyed` builds on. Reach for it when you're bridging non-RxJS async resources.
+
+## Choosing the Right Pattern
+
+```mermaid
+flowchart TD
+    A[Need reactive data in a component] --> B{Does state live in a Store?}
+    B -->|Yes, NgRx Store| C["store.selectSignal(selector)"]
+    B -->|Yes, SignalStore| D["store.property() as signal"]
+    B -->|No| E{Template-only?}
+    E -->|Yes| F["async pipe or toSignal()"]
+    E -->|No| G{What kind of async?}
+    G -->|"Local load (experimental)"| H["rxResource ⚠️"]
+    G -->|Side effect / DOM / router| I["takeUntilDestroyed() in constructor"]
+```
+
+## Quick Reference
+
+| Scenario | Pattern |
 |---|---|
-| Inside constructor | `takeUntilDestroyed()` |
-| Outside injection context | `takeUntilDestroyed(destroyRef)` |
-| Template value binding | `toSignal` |
-| Finite stream (HTTP, timer) | Nothing — it completes |
+| State in NgRx Store | `store.selectSignal(selector)` |
+| State in NgRx SignalStore | `store.property()` signal |
+| HTTP inside store | NgRx Effects / `rxMethod` |
+| Template-only value | `async` pipe or `toSignal()` |
+| Value needed in class logic | `toSignal()` |
+| Derived from multiple signals | `computed()` |
+| Local async load (experimental) | `rxResource` ⚠️ |
+| Imperative side effect | `takeUntilDestroyed()` in constructor |
+| Nested observables | Flattening operator (`switchMap` etc.) |
+| Non-observable async cleanup | `DestroyRef.onDestroy()` |
 
-**Manage manually** when you need control:
+## The Priority Order
 
-| When | Use |
-|---|---|
-| Multiple subscriptions | `new Subscription()` + `.add()` |
-| Unsubscribe before destroy | `this.subscription.unsubscribe()` |
+When you encounter a subscription need, run through this checklist:
 
-## Conclusion
+1. **Is there a store?** Read from it with `selectSignal` or signal properties. Don't subscribe.
+2. **Is HTTP going into a store?** Put it in an Effect or `rxMethod`, not the component.
+3. **Is it template-only?** Use `async` pipe or `toSignal`.
+4. **Do I need it in class logic?** Use `toSignal`.
+5. **Is it a genuine side effect?** `takeUntilDestroyed()` in the constructor.
+6. **Am I subscribing inside a subscribe?** Stop. Use a flattening operator.
 
-The Angular ecosystem has come a long way on this. With `takeUntilDestroyed` and `toSignal`, the boilerplate of subscription management is almost gone. The key principle stays the same though: **every subscription you create is your responsibility to clean up**. The tools just make it easier to honour that responsibility.
+The goal isn't to memorise patterns; it's to develop an instinct for ownership. Every subscription you create is your responsibility. The modern Angular toolset makes that responsibility easy to honour, you just have to reach for the right tool.

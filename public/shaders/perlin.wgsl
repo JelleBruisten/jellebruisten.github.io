@@ -2,13 +2,13 @@
   @builtin(vertex_index) vertexIndex : u32
 ) -> @builtin(position) vec4f {
   let pos = array(
-    vec2f( -1.0,  -1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( -1.0, 1.0), 
+    vec2f( -1.0,  -1.0),
+    vec2f(1.0, -1.0),
+    vec2f( -1.0, 1.0),
 
-    vec2f( -1.0,  1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( 1.0, 1.0) 
+    vec2f( -1.0,  1.0),
+    vec2f(1.0, -1.0),
+    vec2f( 1.0, 1.0)
   );
 
   return vec4f(pos[vertexIndex], 0.0, 1.0);
@@ -32,8 +32,11 @@ fn hash33(p: vec3<f32>) -> vec3<f32> {
     return -1.0 + 2.0 * fract(sin(q) * 43758.5453123);
 }
 
+const SPEED: f32 = 0.010;
+
 fn tetraNoise(o: vec2<f32>) -> f32 {
-    let p = vec3<f32>(o.x + 0.008 * uniforms.iTime, o.y + 0.004 * uniforms.iTime, 0.005 * uniforms.iTime);
+    let t = uniforms.iTime * SPEED;
+    let p = vec3<f32>(o.x + 2.0 * t, o.y + t, 1.25 * t);
     let i = floor(p + dot(p, vec3<f32>(0.33333)));
     let x = p - i + dot(i, vec3<f32>(0.16666));
     let i1 = step(x.yzx, x);
@@ -45,7 +48,7 @@ fn tetraNoise(o: vec2<f32>) -> f32 {
     let p3 = x - 0.5;
 
     let v = max(
-      vec4<f32>(0.5) - vec4<f32>(dot(x, x), dot(p1, p1), dot(p2, p2), dot(p3, p3)), 
+      vec4<f32>(0.5) - vec4<f32>(dot(x, x), dot(p1, p1), dot(p2, p2), dot(p3, p3)),
       vec4<f32>(0.0)
     );
     let d = vec4<f32>(
@@ -64,8 +67,7 @@ fn fs(@builtin(position) fragCoord: vec4<f32>) -> @location(0) vec4<f32> {
     let uv = vec2f(fragCoord.xy);
     // Flip the Y coordinate
     let flippedUV = vec2f(uv.x, uniforms.iResolution.y - uv.y);
-    let p = (flippedUV * 2.5 - uniforms.iResolution.xy) / 
-            (uniforms.iResolution.y / 2.0 + uniforms.iResolution.x / 2.0);
+    let p = (flippedUV - uniforms.iResolution.xy * 0.5) / uniforms.iResolution.y * 2.0;
 
     let f = sin(32.0 * tetraNoise(p));
     let weight = clamp(1.5 - 0.5 * abs(f) / fwidth(f), 0.0, 1.0);

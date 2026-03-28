@@ -43,11 +43,13 @@ import { BlogService } from '../../../services/blog.service';
           @if (p.tags.length > 0) {
             <div class="flex flex-wrap gap-2 mb-6">
               @for (tag of p.tags; track tag) {
-                <span class="text-xs font-medium px-2.5 py-1 rounded-full
-                             bg-brand/8 dark:bg-brand-light/8
-                             text-brand-dark dark:text-brand-light">
+                <a [routerLink]="['/blog']" [queryParams]="{ tag }"
+                   class="text-xs font-medium px-2.5 py-1 rounded-full transition-colors
+                          bg-brand/8 dark:bg-brand-light/8
+                          text-brand-dark dark:text-brand-light
+                          hover:bg-brand/20 dark:hover:bg-brand-light/20">
                   {{ tag }}
-                </span>
+                </a>
               }
             </div>
           }

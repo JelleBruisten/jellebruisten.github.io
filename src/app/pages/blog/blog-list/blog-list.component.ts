@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
 
 @Component({
@@ -22,9 +24,28 @@ import { BlogService } from '../../../services/blog.service';
         </p>
       </div>
 
+      <!-- Active tag filter -->
+      @if (activeTag()) {
+        <div class="flex items-center gap-3 mb-6">
+          <span class="text-sm text-slate-600 dark:text-slate-400">Filtered by:</span>
+          <button (click)="clearTag()"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full
+                         bg-brand/15 dark:bg-brand-light/15
+                         text-brand-dark dark:text-brand-light
+                         hover:bg-brand/25 dark:hover:bg-brand-light/25 transition-colors">
+            {{ activeTag() }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+      }
+
       <!-- Post list -->
       <div class="space-y-4">
-        @for (post of posts; track post.slug) {
+        @for (post of posts(); track post.slug) {
           <a [routerLink]="['/blog', post.slug]"
              class="group block bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl
                     border border-slate-200/60 dark:border-slate-700/60 p-6 sm:p-8
@@ -34,15 +55,17 @@ import { BlogService } from '../../../services/blog.service';
 
             <div class="flex items-start justify-between gap-4 flex-wrap">
               <div class="flex-1 min-w-0">
+
                 <!-- Tags -->
                 @if (post.tags.length > 0) {
                   <div class="flex flex-wrap gap-2 mb-3">
                     @for (tag of post.tags; track tag) {
-                      <span class="text-xs font-medium px-2.5 py-1 rounded-full
-                                   bg-brand/8 dark:bg-brand-light/8
-                                   text-brand-dark dark:text-brand-light">
+                      <button (click)="filterByTag(tag, $event)"
+                              [class]="tag === activeTag()
+                                ? 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors ring-1 ring-inset ring-brand-dark dark:ring-brand-light bg-brand/15 dark:bg-brand-light/15 text-brand-dark dark:text-brand-light'
+                                : 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors bg-brand/8 dark:bg-brand-light/8 text-brand-dark dark:text-brand-light hover:bg-brand/20 dark:hover:bg-brand-light/20'">
                         {{ tag }}
-                      </span>
+                      </button>
                     }
                   </div>
                 }
@@ -76,7 +99,11 @@ import { BlogService } from '../../../services/blog.service';
 
         @empty {
           <div class="text-center py-20 text-slate-600 dark:text-slate-400">
-            No posts yet — check back soon.
+            @if (activeTag()) {
+              No posts tagged "{{ activeTag() }}".
+            } @else {
+              No posts yet — check back soon.
+            }
           </div>
         }
       </div>
@@ -84,6 +111,36 @@ import { BlogService } from '../../../services/blog.service';
   `,
 })
 export class BlogListComponent {
-  private blog = inject(BlogService);
-  protected posts = this.blog.getAllPosts();
+  private blog   = inject(BlogService);
+  private router = inject(Router);
+  private route  = inject(ActivatedRoute);
+
+  protected activeTag = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('tag') ?? '')),
+    { initialValue: '' }
+  );
+
+  protected posts = computed(() => {
+    const tag = this.activeTag();
+    const all  = this.blog.getAllPosts();
+    return tag ? all.filter(p => p.tags.includes(tag)) : all;
+  });
+
+  protected filterByTag(tag: string, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tag: this.activeTag() === tag ? null : tag },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  protected clearTag(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tag: null },
+      queryParamsHandling: 'merge',
+    });
+  }
 }

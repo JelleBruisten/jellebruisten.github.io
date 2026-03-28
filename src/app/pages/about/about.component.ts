@@ -25,16 +25,6 @@ const contributions = [
     url: 'https://github.com/ngrx/platform',
   },
   {
-    name: 'jsverse/transloco',
-    description: 'The internationalisation library for Angular.',
-    url: 'https://github.com/jsverse/transloco',
-  },
-  {
-    name: 'nrwl/nx',
-    description: 'Smart, fast and extensible build system for monorepos.',
-    url: 'https://github.com/nrwl/nx',
-  },
-  {
     name: 'ng-matero/extensions',
     description: 'Angular Material Extensions library.',
     url: 'https://github.com/ng-matero/extensions',
@@ -180,6 +170,9 @@ const contributions = [
                 </div>
               </a>
             }
+            <p class="text-sm text-slate-500 dark:text-slate-400 pt-2">
+              …among others.
+            </p>
           </div>
         </div>
       </section>

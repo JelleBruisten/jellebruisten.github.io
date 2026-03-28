@@ -15,17 +15,20 @@ vec3 hash33(vec3 p)
     return -1.0 + 2.0*fract(sin(p)*43758.5453123);
 }
 
+const float SPEED = 0.010;
+
 float tetraNoise(vec2 o) // Perlin(ish) Noise Function adapted from Stefan Gustavson's 'Simplex Noise Demystified' (Math)
 {
-    vec3 p = vec3(o.x + 0.008*u_time, o.y + 0.004*u_time,0.005*u_time);
+    float t = u_time * SPEED;
+    vec3 p = vec3(o.x + 2.0*t, o.y + t, 1.25*t);
     vec3 i = floor(p + dot(p, vec3(0.33333,0.33333,0.33333)));
     p -= i - dot(i, vec3(0.16666,0.16666,0.16666));
-    
+
     vec3 i1 = step(p.yzx, p);
     vec3 i2 = max(i1, 1.0-i1.zxy);
     i1 = min(i1, 1.0-i1.zxy);
-    vec3 p1 = p - i1 + 0.16666, 
-         p2 = p - i2 + 0.33333, 
+    vec3 p1 = p - i1 + 0.16666,
+         p2 = p - i2 + 0.33333,
          p3 = p - 0.5;
     vec4 v = max(0.5 - vec4(dot(p,p), dot(p1,p1), dot(p2,p2), dot(p3,p3)), 0.0);
     vec4 d = vec4(dot(p, hash33(i)), dot(p1, hash33(i + i1)), dot(p2, hash33(i + i2)), dot(p3, hash33(i + 1.0)));
@@ -35,10 +38,8 @@ float tetraNoise(vec2 o) // Perlin(ish) Noise Function adapted from Stefan Gusta
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ) //Meta-structure adapted from Shane - https://www.shadertoy.com/view/ldscWH (Thank you!)
 {
-    vec2 p =  (fragCoord.xy*2.5 - u_resolution.xy) / 
-              (u_resolution.y/2.0 + u_resolution.x/2.0);// Convert Coords
-    float freq = u_resolution.x < 400.0 ? 16.0 : 32.0;
-    float f = sin(freq * tetraNoise(p));
+    vec2 p = (fragCoord.xy - u_resolution.xy * 0.5) / u_resolution.y * 2.0;
+    float f = sin(32.0 * tetraNoise(p));
     float weight =  clamp( 1.5-.5*abs(f)/fwidth(f),0.,1.);
 
     float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
