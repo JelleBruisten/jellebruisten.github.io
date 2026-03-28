@@ -114,20 +114,32 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
   // Render loop
   let rafHandle: number | null = null;
 
-  // control wheteer we are paused
+  // control whether we are paused
   let paused = false;
 
   // time
   let accumulatedTime = 0;
   let lastRenderTime = 0; // Last frame's timestamp
+
+  // Frame rate limiting: 0 = unlimited
+  let minFrameTime = options.settings["fpsLimit"]
+    ? 1000 / (options.settings["fpsLimit"] as number)
+    : 0;
+
   const render = (timestamp: number) => {
     if (!lastRenderTime) {
       lastRenderTime = timestamp;
-  }
+    }
 
-  if (paused) {
+    if (paused) {
       return; // Skip rendering while paused
-  }
+    }
+
+    // Frame rate limiting — skip draw but keep RAF running
+    if (minFrameTime > 0 && (timestamp - lastRenderTime) < minFrameTime) {
+      rafHandle = requestAnimationFrame(render);
+      return;
+    }
 
     const delta = timestamp - lastRenderTime; // Time since the last frame
     accumulatedTime += delta; // Add delta to accumulated time
@@ -146,6 +158,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
 
     const commandBuffer = encoder.finish();
     device?.queue?.submit([commandBuffer]);
+    options.onDraw?.();
     rafHandle = requestAnimationFrame(render);
   };
   rafHandle = requestAnimationFrame(render);
@@ -187,6 +200,9 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     },
     darkmode: (dark) => {
       uniforms.iDarkMode = clamp(dark, darkModeColor, lightModeColor);
+    },
+    setFpsLimit: (fps) => {
+      minFrameTime = fps > 0 ? 1000 / fps : 0;
     }
   } satisfies RenderProgramHandles;
 }

@@ -39,8 +39,12 @@ export class SettingsService {
 
   readonly showFps = signal(false);
 
+  // 0 = unlimited, 60/120/180 = capped
+  readonly fpsLimit = signal(60);
+
   readonly effectiveSettings = computed(() => ({
     dark: this.darkLevel(),
+    fpsLimit: this.fpsLimit(),
   }))
 
   constructor() {

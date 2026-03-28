@@ -121,6 +121,12 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
   let accumulatedTime = 0;
   let lastRenderTime = 0; // Last frame's timestamp
   let frameCount = 0;
+
+  // Frame rate limiting: 0 = unlimited
+  let minFrameTime = options.settings["fpsLimit"]
+    ? 1000 / (options.settings["fpsLimit"] as number)
+    : 0;
+
   const render = (timestamp: number) => {
     // Apply any queued resize at the very start of the frame so the canvas is
     // immediately redrawn at the new size — no visible blank frame.
@@ -139,6 +145,12 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
     if (paused || stopped) {
         return; // Skip rendering while paused
+    }
+
+    // Frame rate limiting — skip draw but keep RAF running
+    if (minFrameTime > 0 && (timestamp - lastRenderTime) < minFrameTime) {
+      rafHandle = requestAnimationFrame(render);
+      return;
     }
 
     const rawDelta = timestamp - lastRenderTime;
@@ -166,6 +178,7 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
     // Draw the quad
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    options.onDraw?.();
 
     rafHandle = requestAnimationFrame(render);
   }
@@ -211,6 +224,9 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
     darkmode(dark) {
       gl.useProgram(program);
       gl.uniform1f(darkModeLocation, clamp(dark, darkModeColor, lightModeColor))
+    },
+    setFpsLimit(fps) {
+      minFrameTime = fps > 0 ? 1000 / fps : 0;
     }
   } satisfies RenderProgramHandles;
 

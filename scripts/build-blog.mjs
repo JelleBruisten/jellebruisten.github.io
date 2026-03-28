@@ -3,8 +3,10 @@
  * Blog build script — run before `ng build`.
  * Reads markdown from src/content/blog/, converts to HTML,
  * then generates:
- *   src/generated/blog-data.ts  — imported directly by Angular (no HTTP)
+ *   src/generated/blog-data.ts  — metadata only (no content), imported by Angular
+ *   public/content/blog/{slug}.json — individual post content, loaded on demand
  *   routes.txt                  — consumed by Angular prerender
+ *   public/sitemap.xml          — SEO sitemap
  */
 
 import { readdir, readFile, writeFile, mkdir } from 'fs/promises';
@@ -19,6 +21,7 @@ const root = join(__dirname, '..');
 
 const contentDir   = join(root, 'src', 'content', 'blog');
 const generatedDir = join(root, 'src', 'generated');
+const blogContentDir = join(root, 'public', 'content', 'blog');
 const routesFile   = join(root, 'routes.txt');
 const sitemapFile  = join(root, 'public', 'sitemap.xml');
 
@@ -34,6 +37,7 @@ function escapeHtml(str) {
 
 async function buildBlog() {
   await mkdir(generatedDir, { recursive: true });
+  await mkdir(blogContentDir, { recursive: true });
 
   // Shiki: build-time syntax highlighting, dual light/dark themes
   const highlighter = await createHighlighter({
@@ -100,7 +104,17 @@ async function buildBlog() {
   const enabled = posts.filter(p => p.enabled);
   enabled.sort((a, b) => b.date.localeCompare(a.date));
 
-  // Generate TypeScript
+  // Write individual content JSON files
+  await Promise.all(enabled.map(post =>
+    writeFile(
+      join(blogContentDir, `${post.slug}.json`),
+      JSON.stringify({ content: post.content }),
+      'utf-8'
+    )
+  ));
+
+  // Generate TypeScript — metadata only, no content
+  const metadata = enabled.map(({ content, ...meta }) => meta);
   const ts = [
     '// AUTO-GENERATED — do not edit manually.',
     '// Run: node scripts/build-blog.mjs  (or npm run build:blog)',
@@ -112,11 +126,10 @@ async function buildBlog() {
     '  description: string;',
     '  tags: string[];',
     '  readTime: number;',
-    '  content: string;',
     '  enabled: boolean;',
     '}',
     '',
-    `export const BLOG_POSTS: BlogPost[] = ${JSON.stringify(enabled, null, 2)};`,
+    `export const BLOG_POSTS: BlogPost[] = ${JSON.stringify(metadata, null, 2)};`,
     '',
   ].join('\n');
 
@@ -155,6 +168,7 @@ async function buildBlog() {
   await writeFile(sitemapFile, sitemap, 'utf-8');
 
   console.log(`✓ Blog: generated ${enabled.length} posts (${posts.length - enabled.length} disabled)`);
+  console.log(`✓ Content: ${enabled.length} JSON files written to public/content/blog/`);
   console.log(`✓ Routes: ${routes.length} routes written to routes.txt`);
   console.log(`✓ Sitemap: ${staticPages.length + enabled.length} URLs written to public/sitemap.xml`);
 }

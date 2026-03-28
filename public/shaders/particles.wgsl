@@ -41,8 +41,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     // Grid: one particle per cell. Scale = cells per normalised height unit.
     // At 16:9 this gives ~4 × 7 ≈ 28 particles visible at any time — similar
     // density to the old shader but O(1) per pixel instead of O(N²).
-    let SCALE   = 4.0f;
-    let CONN    = 0.85f;
+    let SCALE   = 5.0f;
+    let CONN    = 0.90f;
     let CONN_SQ = CONN * CONN;
 
     let sv = uv * SCALE;
@@ -94,8 +94,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     // Neighbour particles are always > 0.25 cell units from gv, so only the
     // centre-cell particle (pts[4]) ever falls within the dot/glow radius.
     let dc = length(gv - pts[4]);
-    acc = max(acc, smoothstep(0.04, 0.012, dc));
-    acc = max(acc, smoothstep(0.12, 0.0,   dc) * 0.15);
+    acc = max(acc, smoothstep(0.05, 0.015, dc));
+    acc = max(acc, smoothstep(0.15, 0.0,   dc) * 0.15);
 
     return vec4f(mix(bg, ink, clamp(acc, 0.0, 1.0)), 1.0);
 }

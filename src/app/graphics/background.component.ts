@@ -54,6 +54,11 @@ export class BackgroundComponent {
       this.programRef?.programHandle?.darkmode(dark);
     });
 
+    effect(() => {
+      const fps = this.settings.fpsLimit();
+      this.programRef?.programHandle?.setFpsLimit(fps);
+    });
+
     this.background.events$.pipe(takeUntilDestroyed()).subscribe((event) => {
       switch(event.type) {
         case "pause": this.programRef?.programHandle?.pause(); break;

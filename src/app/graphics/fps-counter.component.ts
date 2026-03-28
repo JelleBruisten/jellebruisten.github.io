@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { BackgroundProgramManager } from './manager';
+import { SettingsService } from '../settings/setting.service';
 
 @Component({
   selector: 'app-fps-counter',
@@ -21,34 +23,17 @@ import { ChangeDetectionStrategy, Component, OnDestroy, signal } from '@angular/
       letter-spacing: 0.04em;
     }
   `],
-  template: `{{ fps() }} fps`,
+  template: `{{ display() }}`,
 })
-export class FpsCounterComponent implements OnDestroy {
-  protected fps = signal(0);
+export class FpsCounterComponent {
+  private readonly manager = inject(BackgroundProgramManager);
+  private readonly settings = inject(SettingsService);
 
-  private frameCount = 0;
-  private lastTime = performance.now();
-  private rafId = 0;
-
-  constructor() {
-    this.loop();
-  }
-
-  private loop(): void {
-    this.rafId = requestAnimationFrame(() => {
-      this.frameCount++;
-      const now = performance.now();
-      const elapsed = now - this.lastTime;
-      if (elapsed >= 500) {
-        this.fps.set(Math.round((this.frameCount / elapsed) * 1000));
-        this.frameCount = 0;
-        this.lastTime = now;
-      }
-      this.loop();
-    });
-  }
-
-  ngOnDestroy(): void {
-    cancelAnimationFrame(this.rafId);
-  }
+  protected display = computed(() => {
+    const fps = this.manager.drawFps();
+    const limit = this.settings.fpsLimit();
+    return limit > 0
+      ? `${fps} / ${limit} fps`
+      : `${fps} fps`;
+  });
 }

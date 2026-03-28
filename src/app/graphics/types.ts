@@ -14,6 +14,7 @@ export interface RenderProgramHandles {
   resume(): void;
   resize(width: number, height: number): void;
   darkmode(darkmode: number): void;
+  setFpsLimit(fps: number): void;
 }
 
 export interface RenderProgramOptions {
@@ -24,5 +25,8 @@ export interface RenderProgramOptions {
 
   // contains a webgpu shader or fragment shader in the case of webGL
   shaderSource: string;
-  settings: Record<string, boolean | number>
+  settings: Record<string, boolean | number>;
+
+  // Called after each actual GPU draw — used for FPS measurement
+  onDraw?: () => void;
 }

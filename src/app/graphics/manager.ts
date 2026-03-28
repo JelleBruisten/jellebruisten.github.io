@@ -1,4 +1,4 @@
-import { inject, Injectable, isDevMode } from "@angular/core";
+import { inject, Injectable, isDevMode, signal } from "@angular/core";
 import { GraphicsRuntime } from "./runtime";
 import { RenderProgramHandles, RenderProgramOptions, RenderStrategy, RenderStrategyType } from "./types";
 import { DOCUMENT } from "@angular/common";
@@ -26,6 +26,35 @@ export class BackgroundProgramManager {
   private shaderCache: Map<string, string> | undefined;
   private worker: Worker | undefined;
   private currentProgram: ProgramRef | null = null;
+
+  // Draw FPS measurement — fed by onDraw callback (main thread) or worker messages
+  readonly drawFps = signal(0);
+  private drawCount = 0;
+  private lastDrawCount = 0;
+  private lastDrawTime = performance.now();
+  private drawFpsInterval: ReturnType<typeof setInterval> | null = null;
+
+  private startDrawFpsMeasurement() {
+    this.stopDrawFpsMeasurement();
+    this.drawCount = 0;
+    this.lastDrawCount = 0;
+    this.lastDrawTime = performance.now();
+    this.drawFpsInterval = setInterval(() => {
+      const now = performance.now();
+      const elapsed = now - this.lastDrawTime;
+      const fps = Math.round(((this.drawCount - this.lastDrawCount) / elapsed) * 1000);
+      this.drawFps.set(fps);
+      this.lastDrawCount = this.drawCount;
+      this.lastDrawTime = now;
+    }, 500);
+  }
+
+  private stopDrawFpsMeasurement() {
+    if (this.drawFpsInterval) {
+      clearInterval(this.drawFpsInterval);
+      this.drawFpsInterval = null;
+    }
+  }
 
   async startProgram(name: string, renderStrategy?: RenderStrategy | null, settings?: Settings) {
     if(!renderStrategy) {
@@ -61,9 +90,10 @@ export class BackgroundProgramManager {
 
     // start program either offscreen or normally
     if(renderStrategy.offscreenRendering) {
-      programHandles = await this.startProgramOffscreen(name, canvas, renderStrategy, settings, scale)
+      programHandles = await this.startProgramOffscreen(name, canvas, renderStrategy, settings, scale);
     } else {
       programHandles = await this.startProgramNormally(name, canvas, renderStrategy, settings, scale);
+      this.startDrawFpsMeasurement();
     }
 
     // construct a information object, with the current strategy, canvas, cleanup methods, handles for interacting with the graphics backend
@@ -122,6 +152,9 @@ export class BackgroundProgramManager {
       },
       darkmode: (dark) => {
         worker?.postMessage({ type: 'darkmode', dark: dark});
+      },
+      setFpsLimit: (fps) => {
+        worker?.postMessage({ type: 'fpsLimit', fps: fps});
       }
     }
 
@@ -129,7 +162,14 @@ export class BackgroundProgramManager {
   }
 
   private getWorker() {
-    this.worker ??= new Worker(new URL('./driver/driver.worker', import.meta.url));
+    if (!this.worker) {
+      this.worker = new Worker(new URL('./driver/driver.worker', import.meta.url));
+      this.worker.onmessage = (evt) => {
+        if (evt.data.type === 'drawFps') {
+          this.drawFps.set(evt.data.fps);
+        }
+      };
+    }
     return this.worker;
   }
 
@@ -140,7 +180,8 @@ export class BackgroundProgramManager {
       navigator: navigator,
       height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
       width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
-      settings: settings
+      settings: settings,
+      onDraw: () => { this.drawCount++; }
     } as const
 
     switch(renderStrategy.type) {
@@ -171,6 +212,27 @@ export class BackgroundProgramManager {
     }
 
     return programHandles;
+  }
+
+  /**
+   * Prefetch a single background's shader into the in-memory cache.
+   * Uses the current program's render strategy to pick the right file extension.
+   */
+  prefetchShader(backgroundName: string) {
+    const strategyType = this.currentProgram?.strategy?.type;
+    if (strategyType == null) return;
+    const ext = strategyType === RenderStrategyType.WebGPU ? '.wgsl' : '.glsl';
+    this.resolveShader(`${backgroundName}${ext}`);
+  }
+
+  /**
+   * Prefetch the current background's shader for a different renderer type.
+   */
+  prefetchStrategy(strategyType: RenderStrategyType) {
+    const name = this.currentProgram?.name;
+    if (!name) return;
+    const ext = strategyType === RenderStrategyType.WebGPU ? '.wgsl' : '.glsl';
+    this.resolveShader(`${name}${ext}`);
   }
 
   private async resolveShader(shaderName: string) {

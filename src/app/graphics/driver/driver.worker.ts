@@ -40,6 +40,31 @@ const resolveShader = async(shaderName: string) => {
   return shaderSource as string;
 }
 
+// Draw counter — reported to main thread periodically for FPS measurement
+let drawCount = 0;
+let fpsInterval: ReturnType<typeof setInterval> | null = null;
+
+function startFpsReporting() {
+  if (fpsInterval) return;
+  let lastCount = 0;
+  let lastTime = performance.now();
+  fpsInterval = setInterval(() => {
+    const now = performance.now();
+    const elapsed = now - lastTime;
+    const fps = Math.round(((drawCount - lastCount) / elapsed) * 1000);
+    lastCount = drawCount;
+    lastTime = now;
+    postMessage({ type: 'drawFps', fps });
+  }, 500);
+}
+
+function stopFpsReporting() {
+  if (fpsInterval) {
+    clearInterval(fpsInterval);
+    fpsInterval = null;
+  }
+}
+
 const init = async (evt: BackgroundOptions) => {
   const canvas = evt.canvas as OffscreenCanvas;
   const renderStrategy = evt.strategy as RenderStrategy;
@@ -49,7 +74,8 @@ const init = async (evt: BackgroundOptions) => {
     navigator: navigator,
     height: evt.height,
     width: evt.width,
-    settings: evt.settings
+    settings: evt.settings,
+    onDraw: () => { drawCount++; }
   } as const
 
   const shaderName = evt.shaderName;
@@ -79,14 +105,17 @@ onmessage = (evt) => {
       // Chain onto the previous init so they never run concurrently.
       initChain = initChain.then(async () => {
         programHandles?.stop();
+        drawCount = 0;
         programHandles = await init(evt.data) ?? null;
+        startFpsReporting();
       });
     break;
     case 'stop':
       programHandles?.stop();
+      stopFpsReporting();
     break;
     case 'resume':
-      programHandles?.resume();      
+      programHandles?.resume();
     break;
     case 'pause':
       programHandles?.pause();
@@ -96,6 +125,9 @@ onmessage = (evt) => {
     break;
     case 'darkmode':
       programHandles?.darkmode(evt.data.dark)
-    break;    
+    break;
+    case 'fpsLimit':
+      programHandles?.setFpsLimit(evt.data.fps)
+    break;
   }
 };

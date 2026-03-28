@@ -11,8 +11,8 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe, isPlatformServer } from '@angular/common';
 import { DomSanitizer, Meta, SafeHtml, Title } from '@angular/platform-browser';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { map, of, switchMap } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
 
 @Component({
@@ -70,11 +70,24 @@ import { BlogService } from '../../../services/blog.service';
             <span>{{ p.readTime }} min read</span>
           </div>
 
-          <!-- Content pre-built from our own markdown — bypass sanitizer so
+          <!-- Content loaded on demand — bypass sanitizer so
                shiki's inline CSS custom properties are preserved -->
-          <div class="prose text-slate-700 dark:text-slate-300"
-               [innerHTML]="safeContent()">
-          </div>
+          @if (safeContent()) {
+            <div class="prose text-slate-700 dark:text-slate-300"
+                 [innerHTML]="safeContent()">
+            </div>
+          } @else {
+            <div class="flex items-center gap-3 py-12 justify-center text-slate-400 dark:text-slate-500">
+              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg"
+                   fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10"
+                        stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Loading content...
+            </div>
+          }
         </article>
 
         <!-- Bottom nav -->
@@ -124,10 +137,23 @@ export class BlogPostComponent {
     { initialValue: '' }
   );
 
-  protected post        = computed(() => this.blog.getPost(this.slug()));
+  protected post = computed(() => this.blog.getPost(this.slug()));
+
+  // Content loaded on demand via HTTP — TransferState ensures SSR-fetched
+  // content is reused on the client without a duplicate request.
+  private contentHtml = toSignal(
+    toObservable(this.slug).pipe(
+      switchMap(slug => slug
+        ? this.blog.getPostContent(slug)
+        : of(null)
+      )
+    ),
+    { initialValue: null }
+  );
+
   protected safeContent = computed((): SafeHtml | null => {
-    const p = this.post();
-    return p ? this.sanitizer.bypassSecurityTrustHtml(p.content) : null;
+    const html = this.contentHtml();
+    return html ? this.sanitizer.bypassSecurityTrustHtml(html) : null;
   });
 
   constructor() {

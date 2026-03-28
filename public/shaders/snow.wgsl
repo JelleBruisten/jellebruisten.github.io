@@ -1,64 +1,69 @@
-@vertex fn vs(
-  @builtin(vertex_index) vertexIndex : u32
-) -> @builtin(position) vec4f {
+@vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
   let pos = array(
-    vec2f( -1.0,  -1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( -1.0, 1.0), 
-
-    vec2f( -1.0,  1.0), 
-    vec2f(1.0, -1.0),  
-    vec2f( 1.0, 1.0) 
+    vec2f(-1.0, -1.0), vec2f(1.0, -1.0), vec2f(-1.0, 1.0),
+    vec2f(-1.0,  1.0), vec2f(1.0, -1.0), vec2f( 1.0, 1.0)
   );
-
   return vec4f(pos[vertexIndex], 0.0, 1.0);
 }
 
-// Uniform Structure
 struct Uniforms {
-    iResolution: vec2f, // Screen resolution
-    iTime: f32,         // Time
-    iDarkmode: f32,
+  iResolution: vec2f,
+  iTime: f32,
+  iDarkmode: f32,
 }
+@group(0) @binding(0) var<uniform> u: Uniforms;
 
-@group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-fn rnd(x: f32) -> f32 {
-    return fract(sin(dot(vec2<f32>(x + 47.49, 38.2467 / (x + 2.3)), vec2<f32>(12.9898, 78.233))) * 43758.5453);
-}
-
-fn drawCircle(center: vec2<f32>, radius: f32, uv: vec2<f32>) -> f32 {
-   return 1.0 - smoothstep(0.0, radius, length(uv - center));
-}
-
-fn fmod(x: f32, y: f32) -> f32 {
-    return x - y * floor(x / y);
+fn hash(n: f32) -> f32 {
+  return fract(sin(n * 127.1) * 43758.5453);
 }
 
 @fragment
 fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
-    let _BlizardFactor: f32 = 0.2;
-    var uv = fragCoord.xy / uniforms.iResolution.x; // Normalize fragCoord.xy to UV space
+    let uv = fragCoord.xy / u.iResolution;
+    let aspect = u.iResolution.x / u.iResolution.y;
 
-    let darkness = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
-    let bgLight = vec3f(0.808, 0.890, 0.918);
-    let bgDark  = vec3f(0.06,  0.10,  0.22);
-    var fragColor = vec4<f32>(mix(bgLight, bgDark, darkness), 1.0);
-    let totalSnowflakes = 200;
-    var j: f32;
+    // 0 = light, 1 = dark
+    let dark = clamp(1.0 - (u.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
 
-    for (var i: i32 = 0; i < totalSnowflakes; i++) {
-        j = f32(i);
-        let speed = 0.3 + rnd(cos(j)) * (0.7 + 0.5 * cos(j / (f32(totalSnowflakes) * 0.25)));
-        let yRange = uniforms.iResolution.y / uniforms.iResolution.x;
-        let center = vec2<f32>(
-            (0.25 - uv.y) * _BlizardFactor + rnd(j) + 0.1 * cos(uniforms.iTime + sin(j)),
-            fmod(sin(j) + speed * (uniforms.iTime * 1.5 * (0.1 + _BlizardFactor)), yRange)
-        );
-        let radiusMult = select(1.0, 2.5, uniforms.iResolution.x < 400.0);
-        let radius = (0.001 + speed * 0.012) * radiusMult;
-        fragColor += vec4<f32>(0.09 * drawCircle(center, radius, uv));
+    // Background
+    let bg = mix(vec3f(0.70, 0.78, 0.82), vec3f(0.06, 0.10, 0.22), dark);
+    var col = bg;
+
+    // Snow parameters — adapt to dark/light
+    let snowColor = vec3f(1.0);
+    let opacity   = mix(0.7, 1.0, dark);
+    let sizeScale = 2.0;
+
+    // Scale count by aspect ratio so density stays constant across screen sizes.
+    // 100 is the base density for a 1:1 square; wider screens get more flakes.
+    let count = i32(100.0 * max(aspect, 1.0));
+    let t = u.iTime;
+
+    for (var i = 0; i < 300; i++) {
+        if (i >= count) { break; }
+        let fi = f32(i);
+        let h1 = hash(fi);
+        let h2 = hash(fi + 63.7);
+        let h3 = hash(fi + 142.3);
+
+        // Each flake: random x, random speed, random size
+        let speed = 0.04 + h2 * 0.08;
+        let size  = (0.003 + h3 * 0.007) * sizeScale;
+
+        // Position: drift horizontally with sin, fall downward and wrap
+        let x = h1 + 0.05 * sin(t * 0.5 + fi * 1.7);
+        let y = fract(h2 + t * speed);
+
+        let center = vec2f(x, y);
+        let diff = abs(uv - center);
+
+        // Bounding box early exit
+        if (diff.x < size && diff.y < size) {
+            let d = length(vec2f(diff.x * aspect, diff.y));
+            let circle = smoothstep(size, size * 0.2, d);
+            col = mix(col, snowColor, circle * opacity);
+        }
     }
 
-    return fragColor;
+    return vec4f(col, 1.0);
 }

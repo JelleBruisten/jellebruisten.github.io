@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { BackgroundService } from '../../graphics/background.service';
+import { BackgroundProgramManager } from '../../graphics/manager';
 import { GraphicsRuntime } from '../../graphics/runtime';
 import { SettingsService } from '../../settings/setting.service';
 
@@ -156,6 +157,7 @@ import { SettingsService } from '../../settings/setting.service';
               <button
                 [class.active]="bgService.name() === bg"
                 class="opt-btn"
+                (mouseenter)="programManager.prefetchShader(bg)"
                 (click)="bgService.name.set(bg)">
                 {{ bg }}
               </button>
@@ -169,9 +171,11 @@ import { SettingsService } from '../../settings/setting.service';
           <div class="btn-group" style="margin-bottom:0.5rem" role="group" aria-label="Graphics API">
             <button [class.active]="bgService.strategy()?.type === 0" class="opt-btn"
                     [disabled]="!runtime.supportsWebGL()"
+                    (mouseenter)="programManager.prefetchStrategy(0)"
                     (click)="bgService.toggleRendering(0)">WebGL</button>
             <button [class.active]="bgService.strategy()?.type === 1" class="opt-btn"
                     [disabled]="!runtime.supportsWebGPU()"
+                    (mouseenter)="programManager.prefetchStrategy(1)"
                     (click)="bgService.toggleRendering(1)">WebGPU</button>
           </div>
           <div class="btn-group" role="group" aria-label="Thread mode">
@@ -180,6 +184,21 @@ import { SettingsService } from '../../settings/setting.service';
             <button [class.active]="bgService.strategy()?.offscreenRendering === true" class="opt-btn"
                     [disabled]="!runtime.supportsOffscreen()"
                     (click)="bgService.toggleWebworker(true)">Worker</button>
+          </div>
+        </section>
+
+        <!-- Frame Rate -->
+        <section class="section" aria-labelledby="fps-label">
+          <p id="fps-label" class="section-label">Frame Rate</p>
+          <div class="btn-group" role="group" aria-label="FPS limit">
+            @for (opt of fpsOpts; track opt.value) {
+              <button
+                [class.active]="settings.fpsLimit() === opt.value"
+                class="opt-btn"
+                (click)="settings.fpsLimit.set(opt.value)">
+                {{ opt.label }}
+              </button>
+            }
           </div>
         </section>
 
@@ -209,12 +228,20 @@ export class SettingsDrawerComponent {
   protected open = signal(false);
   protected settings = inject(SettingsService);
   protected bgService = inject(BackgroundService);
+  protected programManager = inject(BackgroundProgramManager);
   protected runtime = inject(GraphicsRuntime);
 
   protected darkOpts = [
     { value: 0, label: 'Auto' },
     { value: 1, label: 'Light' },
     { value: 2, label: 'Dark' },
+  ] as const;
+
+  protected fpsOpts = [
+    { value: 60,  label: '60' },
+    { value: 120, label: '120' },
+    { value: 180, label: '180' },
+    { value: 0,   label: '∞' },
   ] as const;
 
 }
