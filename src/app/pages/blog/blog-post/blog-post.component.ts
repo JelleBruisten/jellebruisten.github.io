@@ -14,10 +14,12 @@ import { DomSanitizer, Meta, SafeHtml, Title } from '@angular/platform-browser';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, of, switchMap } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
+import { ArrowLeftIconComponent } from '../../../shared/icons/arrow-left-icon.component';
+import { SpinnerIconComponent } from '../../../shared/icons/spinner-icon.component';
 
 @Component({
   selector: 'app-blog-post',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, ArrowLeftIconComponent, SpinnerIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16">
@@ -28,11 +30,7 @@ import { BlogService } from '../../../services/blog.service';
                 text-slate-600 dark:text-slate-400
                 hover:text-brand-dark dark:hover:text-brand-light
                 transition-colors mb-8">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
-        </svg>
+        <app-arrow-left-icon class="text-[16px]" />
         All posts
       </a>
 
@@ -78,13 +76,7 @@ import { BlogService } from '../../../services/blog.service';
             </div>
           } @else {
             <div class="flex items-center gap-3 py-12 justify-center text-slate-400 dark:text-slate-500">
-              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg"
-                   fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle class="opacity-25" cx="12" cy="12" r="10"
-                        stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <app-spinner-icon class="animate-spin text-[20px]" />
               Loading content...
             </div>
           }
@@ -96,11 +88,7 @@ import { BlogService } from '../../../services/blog.service';
              class="inline-flex items-center gap-2 text-sm font-medium
                     text-slate-600 dark:text-slate-400
                     hover:text-brand-dark dark:hover:text-brand-light transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
-            </svg>
+            <app-arrow-left-icon class="text-[16px]" />
             All posts
           </a>
         </div>

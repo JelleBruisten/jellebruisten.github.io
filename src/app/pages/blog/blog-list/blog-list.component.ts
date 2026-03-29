@@ -5,10 +5,12 @@ import { Meta, Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { BlogService } from '../../../services/blog.service';
+import { CloseIconComponent } from '../../../shared/icons/close-icon.component';
+import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.component';
 
 @Component({
   selector: 'app-blog-list',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, CloseIconComponent, ArrowRightIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16">
@@ -35,11 +37,7 @@ import { BlogService } from '../../../services/blog.service';
                          text-brand-dark dark:text-brand-light
                          hover:bg-brand/25 dark:hover:bg-brand-light/25 transition-colors">
             {{ activeTag() }}
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2.5"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-            </svg>
+            <app-close-icon class="text-[13px]" />
           </button>
         </div>
       }
@@ -81,15 +79,11 @@ import { BlogService } from '../../../services/blog.service';
               </div>
 
               <!-- Arrow -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round"
-                   class="shrink-0 mt-1 text-slate-300 dark:text-slate-600
+              <app-arrow-right-icon
+                   class="shrink-0 mt-1 text-[20px] text-slate-300 dark:text-slate-600
                           group-hover:text-brand-dark dark:group-hover:text-brand-light
                           group-hover:translate-x-1 transition-all"
-                   aria-hidden="true">
-                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-              </svg>
+                   aria-hidden="true" />
             </div>
 
             <div class="mt-4 text-xs font-medium text-slate-600 dark:text-slate-400">

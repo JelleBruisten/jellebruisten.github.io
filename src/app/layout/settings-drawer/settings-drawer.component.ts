@@ -3,9 +3,12 @@ import { BackgroundService } from '../../graphics/background.service';
 import { BackgroundProgramManager } from '../../graphics/manager';
 import { GraphicsRuntime } from '../../graphics/runtime';
 import { SettingsService } from '../../settings/setting.service';
+import { CloseIconComponent } from '../../shared/icons/close-icon.component';
+import { GearIconComponent } from '../../shared/icons/gear-icon.component';
 
 @Component({
   selector: 'app-settings-drawer',
+  imports: [CloseIconComponent, GearIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .open-btn {
@@ -104,19 +107,10 @@ import { SettingsService } from '../../settings/setting.service';
       [attr.aria-expanded]="open()"
       [attr.aria-label]="open() ? 'Close settings' : 'Open settings — current background: ' + bgService.name()">
       @if (open()) {
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-        </svg>
+        <app-close-icon class="text-[16px]" />
       } @else {
         <span>{{ bgService.name() }}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
+        <app-gear-icon class="text-[14px]" />
       }
     </button>
 
