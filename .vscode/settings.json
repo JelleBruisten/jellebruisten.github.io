@@ -2,5 +2,13 @@
   "cSpell.words": [
     "darkmode",
     "msaa"
-  ]
+  ],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  }
 }
