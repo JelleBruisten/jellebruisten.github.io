@@ -27,7 +27,7 @@ The `async` pipe subscribes when the component is created and unsubscribes when 
     @if (user$ | async; as user) {
       <h1>Hello, {{ user.name }}</h1>
     }
-  `
+  `,
 })
 export class ProfileComponent {
   protected user$ = inject(UserService).currentUser$;
@@ -87,9 +87,9 @@ class AnalyticsService {
   private destroyRef = inject(DestroyRef);
 
   startTracking() {
-    interval(5000).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => this.flush());
+    interval(5000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.flush());
   }
 }
 ```
@@ -128,12 +128,12 @@ constructor() {
 
 The choice of flattening operator carries meaning; pick the wrong one and the bug is subtle:
 
-| Operator | Behaviour | When to use |
-|---|---|---|
-| `switchMap` | Cancel previous on new emission | Search, navigation, autocomplete |
-| `concatMap` | Queue, wait for previous to complete | Ordered saves, sequential requests |
-| `mergeMap` | Allow concurrent inner observables | Parallel, independent requests |
-| `exhaustMap` | Ignore new while inner is active | Submit buttons, preventing double-send |
+| Operator     | Behaviour                            | When to use                            |
+| ------------ | ------------------------------------ | -------------------------------------- |
+| `switchMap`  | Cancel previous on new emission      | Search, navigation, autocomplete       |
+| `concatMap`  | Queue, wait for previous to complete | Ordered saves, sequential requests     |
+| `mergeMap`   | Allow concurrent inner observables   | Parallel, independent requests         |
+| `exhaustMap` | Ignore new while inner is active     | Submit buttons, preventing double-send |
 
 ## `takeUntil` Operator Ordering
 
@@ -141,16 +141,10 @@ When using `takeUntil` manually, position matters. Operators placed **after** `t
 
 ```typescript
 // ❌ retry runs after takeUntil — can resubscribe after component destroy
-obs$.pipe(
-  takeUntil(destroy$),
-  retry(3)
-)
+obs$.pipe(takeUntil(destroy$), retry(3));
 
 // ✅ takeUntil last, cleanup always wins
-obs$.pipe(
-  retry(3),
-  takeUntil(destroy$)
-)
+obs$.pipe(retry(3), takeUntil(destroy$));
 ```
 
 The same applies to `takeUntilDestroyed`. Keep it as the **last operator** before `.subscribe()`.
@@ -243,7 +237,7 @@ It handles loading state, cancellation, and cleanup automatically. If you're bui
 For non-observable resources like `setInterval`, WebSocket connections, and third-party listeners, use `DestroyRef.onDestroy` directly:
 
 ```typescript
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class WebSocketService {
   private destroyRef = inject(DestroyRef);
 
@@ -254,9 +248,7 @@ export class WebSocketService {
       ws.close();
     });
 
-    return fromEvent<MessageEvent>(ws, 'message').pipe(
-      map(e => JSON.parse(e.data))
-    );
+    return fromEvent<MessageEvent>(ws, "message").pipe(map((e) => JSON.parse(e.data)));
   }
 }
 ```
@@ -279,18 +271,18 @@ flowchart TD
 
 ## Quick Reference
 
-| Scenario | Pattern |
-|---|---|
-| State in NgRx Store | `store.selectSignal(selector)` |
-| State in NgRx SignalStore | `store.property()` signal |
-| HTTP inside store | NgRx Effects / `rxMethod` |
-| Template-only value | `async` pipe or `toSignal()` |
-| Value needed in class logic | `toSignal()` |
-| Derived from multiple signals | `computed()` |
-| Local async load (experimental) | `rxResource` ⚠️ |
-| Imperative side effect | `takeUntilDestroyed()` in constructor |
-| Nested observables | Flattening operator (`switchMap` etc.) |
-| Non-observable async cleanup | `DestroyRef.onDestroy()` |
+| Scenario                        | Pattern                                |
+| ------------------------------- | -------------------------------------- |
+| State in NgRx Store             | `store.selectSignal(selector)`         |
+| State in NgRx SignalStore       | `store.property()` signal              |
+| HTTP inside store               | NgRx Effects / `rxMethod`              |
+| Template-only value             | `async` pipe or `toSignal()`           |
+| Value needed in class logic     | `toSignal()`                           |
+| Derived from multiple signals   | `computed()`                           |
+| Local async load (experimental) | `rxResource` ⚠️                        |
+| Imperative side effect          | `takeUntilDestroyed()` in constructor  |
+| Nested observables              | Flattening operator (`switchMap` etc.) |
+| Non-observable async cleanup    | `DestroyRef.onDestroy()`               |
 
 ## The Priority Order
 

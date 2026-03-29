@@ -16,7 +16,7 @@ This post demonstrates the supported code languages and diagram types.
 interface User {
   id: number;
   name: string;
-  role: 'admin' | 'viewer';
+  role: "admin" | "viewer";
 }
 
 async function fetchUser(id: number): Promise<User> {
@@ -28,7 +28,7 @@ async function fetchUser(id: number): Promise<User> {
 // Angular signal example
 const count = signal(0);
 const doubled = computed(() => count() * 2);
-effect(() => console.log('doubled:', doubled()));
+effect(() => console.log("doubled:", doubled()));
 ```
 
 ### JavaScript
@@ -43,7 +43,7 @@ const debounce = (fn, ms) => {
 };
 
 const search = debounce(async (query) => {
-  const results = await fetch(`/search?q=${query}`).then(r => r.json());
+  const results = await fetch(`/search?q=${query}`).then((r) => r.json());
   renderResults(results);
 }, 300);
 ```
@@ -53,11 +53,13 @@ const search = debounce(async (query) => {
 ```css
 .card {
   background: oklch(0.98 0.01 272 / 60%);
-  border: 1px solid oklch(0.90 0.02 272);
+  border: 1px solid oklch(0.9 0.02 272);
   border-radius: 1rem;
   padding: 1.5rem;
   backdrop-filter: blur(12px);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .card:hover {

@@ -1,10 +1,10 @@
 export const enum RenderStrategyType {
   WebGL,
-  WebGPU
+  WebGPU,
 }
 
 export interface RenderStrategy {
-  readonly type: RenderStrategyType,
+  readonly type: RenderStrategyType;
   readonly offscreenRendering: boolean;
 }
 
@@ -20,8 +20,8 @@ export interface RenderProgramHandles {
 
 /** Options passed to a graphics driver to initialize a shader program. */
 export interface RenderProgramOptions {
-  canvas: HTMLCanvasElement | OffscreenCanvas,
-  navigator: Navigator,
+  canvas: HTMLCanvasElement | OffscreenCanvas;
+  navigator: Navigator;
   width: number;
   height: number;
 

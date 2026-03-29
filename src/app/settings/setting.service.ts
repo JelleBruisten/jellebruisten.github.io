@@ -1,11 +1,19 @@
 import { DOCUMENT } from "@angular/common";
-import { computed, effect, inject, Injectable, isDevMode, linkedSignal, signal } from "@angular/core";
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  isDevMode,
+  linkedSignal,
+  signal,
+} from "@angular/core";
 import { darkModeColor, lightModeColor } from "../graphics/driver/constant";
 
 const enum DarkPreference {
   Auto,
   Light,
-  Dark
+  Dark,
 }
 
 /**
@@ -16,7 +24,7 @@ const enum DarkPreference {
  * consumed by the shader uniform, while `effectiveDark` drives the CSS `.dark` class
  * on the document element via an effect.
  */
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: "root" })
 export class SettingsService {
   private readonly document = inject(DOCUMENT);
 
@@ -29,7 +37,7 @@ export class SettingsService {
   readonly darkLevel = linkedSignal<number>(() => {
     const darkPreference = this.dark();
     const isDark = (dark: DarkPreference) => {
-      switch(dark) {
+      switch (dark) {
         case DarkPreference.Dark:
           return true;
         case DarkPreference.Light:
@@ -38,11 +46,12 @@ export class SettingsService {
         case DarkPreference.Auto:
         default: {
           const window = this.document.defaultView;
-          const prefersDarkMode = window?.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
+          const prefersDarkMode =
+            window?.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
           return prefersDarkMode;
         }
       }
-    }
+    };
     return isDark(darkPreference) ? darkModeColor : lightModeColor;
   });
 
@@ -58,16 +67,13 @@ export class SettingsService {
   readonly effectiveSettings = computed(() => ({
     dark: this.darkLevel(),
     fpsLimit: this.fpsLimit(),
-  }))
+  }));
 
   constructor() {
     const document = inject(DOCUMENT);
 
     effect(() => {
-      document.documentElement.classList.toggle(
-        'dark',
-        this.effectiveDark()
-      )
+      document.documentElement.classList.toggle("dark", this.effectiveDark());
     });
   }
 }

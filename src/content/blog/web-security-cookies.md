@@ -50,10 +50,12 @@ Set-Cookie: session=abc123; SameSite=None; Secure
 Cookie prefixes are enforced by the browser, not the server. If a cookie name starts with `__Secure-` or `__Host-` but the required conditions are not met, the browser silently refuses to store it.
 
 **`__Secure-` prefix** requires:
+
 - The `Secure` flag must be present
 - The cookie must be set from an HTTPS page
 
 **`__Host-` prefix** requires everything `__Secure-` requires, plus:
+
 - `Path=/` must be set
 - No `Domain` attribute
 

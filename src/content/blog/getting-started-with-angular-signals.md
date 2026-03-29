@@ -11,7 +11,7 @@ This guide assumes you know that world. Each section shows you the old pattern a
 
 ## Why Signals Exist
 
-Zone.js works by monkey-patching async APIs (`setTimeout`, `fetch`, event listeners) and notifying Angular when any of them fire. Angular then runs change detection on the whole component tree to figure out what changed. It works, but it's indirect: Angular doesn't know *what* changed, only that *something* might have. This leads to unnecessary checks and `OnPush` becoming something you add as an optimisation rather than a default.
+Zone.js works by monkey-patching async APIs (`setTimeout`, `fetch`, event listeners) and notifying Angular when any of them fire. Angular then runs change detection on the whole component tree to figure out what changed. It works, but it's indirect: Angular doesn't know _what_ changed, only that _something_ might have. This leads to unnecessary checks and `OnPush` becoming something you add as an optimisation rather than a default.
 
 Signals are explicit. When a signal's value changes, Angular knows exactly which templates and computed values depend on it. No tree walking, no guessing. Components using signals skip change detection entirely when none of their signals changed.
 
@@ -24,7 +24,7 @@ Everything else builds on three core functions.
 ### `signal()` — writable state
 
 ```typescript
-import { signal } from '@angular/core';
+import { signal } from "@angular/core";
 
 const count = signal(0);
 
@@ -35,11 +35,11 @@ console.log(count()); // 0
 count.set(5);
 
 // Derive a new value from the current one
-count.update(n => n + 1);
+count.update((n) => n + 1);
 
 // For objects/arrays, spread to keep immutability
 const items = signal<string[]>([]);
-items.update(list => [...list, 'new item']);
+items.update((list) => [...list, "new item"]);
 ```
 
 ### `computed()` — derived, read-only state
@@ -47,16 +47,16 @@ items.update(list => [...list, 'new item']);
 `computed` creates a signal whose value is recalculated when its dependencies change. It's lazy: it won't recalculate until something actually reads it.
 
 ```typescript
-import { computed } from '@angular/core';
+import { computed } from "@angular/core";
 
-const firstName = signal('Ada');
-const lastName  = signal('Lovelace');
+const firstName = signal("Ada");
+const lastName = signal("Lovelace");
 
 const fullName = computed(() => `${firstName()} ${lastName()}`);
 
 console.log(fullName()); // "Ada Lovelace"
 
-lastName.set('Byron');
+lastName.set("Byron");
 console.log(fullName()); // "Ada Byron"
 ```
 
@@ -67,9 +67,9 @@ Use `computed` for everything that can be derived from other signals. It replace
 `effect` runs a function immediately, then re-runs it whenever any signal it read changes:
 
 ```typescript
-import { effect } from '@angular/core';
+import { effect } from "@angular/core";
 
-const pageTitle = signal('Home');
+const pageTitle = signal("Home");
 
 // Runs once on creation, then every time pageTitle changes
 effect(() => {
@@ -90,7 +90,7 @@ effect((onCleanup) => {
   const id = this.activeUserId();
   const ws = new WebSocket(`/ws/user/${id}`);
 
-  ws.onmessage = (e) => this.messages.update(m => [...m, e.data]);
+  ws.onmessage = (e) => this.messages.update((m) => [...m, e.data]);
 
   onCleanup(() => ws.close());
 });
@@ -152,14 +152,12 @@ The key difference: `title` and `subtitle` are now signals. You call them to rea
 
 ```typescript
 export class CardComponent {
-  title    = input.required<string>();
-  subtitle = input('');
+  title = input.required<string>();
+  subtitle = input("");
 
   // No ngOnChanges needed — recomputes automatically
   displayTitle = computed(() =>
-    this.subtitle()
-      ? `${this.title()} (${this.subtitle()})`
-      : this.title()
+    this.subtitle() ? `${this.title()} (${this.subtitle()})` : this.title(),
   );
 }
 ```
@@ -274,19 +272,19 @@ constructor() {
 `linkedSignal` creates a writable signal whose value resets based on another signal, but can also be manually overridden. It's the right tool when something has a sensible default that should follow external state, but the user can also change it:
 
 ```typescript
-import { linkedSignal } from '@angular/core';
+import { linkedSignal } from "@angular/core";
 
-const items = signal(['Apple', 'Banana', 'Cherry']);
+const items = signal(["Apple", "Banana", "Cherry"]);
 
 // Default: first item. Resets when items changes.
 const selectedItem = linkedSignal(() => items()[0]);
 
 console.log(selectedItem()); // "Apple"
 
-selectedItem.set('Cherry'); // manual override
+selectedItem.set("Cherry"); // manual override
 console.log(selectedItem()); // "Cherry"
 
-items.set(['Mango', 'Papaya']); // items changed — resets to new first item
+items.set(["Mango", "Papaya"]); // items changed — resets to new first item
 console.log(selectedItem()); // "Mango"
 ```
 
@@ -299,7 +297,7 @@ Common uses: selected tab defaulting to the first tab, a form field defaulting t
 When you're inside an `effect` or `computed`, reading a signal registers it as a dependency. Sometimes you need the current value of a signal without making the effect re-run when that signal changes:
 
 ```typescript
-import { untracked } from '@angular/core';
+import { untracked } from "@angular/core";
 
 effect(() => {
   // userId IS tracked — effect re-runs when it changes
@@ -308,7 +306,7 @@ effect(() => {
   // preferences is NOT tracked — effect won't re-run if preferences changes
   const prefs = untracked(() => this.userPreferences());
 
-  this.analytics.track('profile-view', { id, theme: prefs.theme });
+  this.analytics.track("profile-view", { id, theme: prefs.theme });
 });
 ```
 
@@ -321,29 +319,27 @@ Signals and RxJS coexist. The bridge functions live in `@angular/core/rxjs-inter
 `toSignal` converts an observable to a signal and handles the subscription lifecycle automatically:
 
 ```typescript
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from "@angular/core/rxjs-interop";
 
 export class SearchComponent {
   private route = inject(ActivatedRoute);
 
   // Subscription created and cleaned up automatically
-  protected slug = toSignal(
-    this.route.paramMap.pipe(map(p => p.get('slug') ?? ''))
-  );
+  protected slug = toSignal(this.route.paramMap.pipe(map((p) => p.get("slug") ?? "")));
 }
 ```
 
 `toObservable` goes the other way, which is useful when you need RxJS operators like `debounceTime` on a signal:
 
 ```typescript
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toObservable } from "@angular/core/rxjs-interop";
 
 export class SearchComponent {
-  protected query = signal('');
+  protected query = signal("");
 
   protected results$ = toObservable(this.query).pipe(
     debounceTime(300),
-    switchMap(q => this.api.search(q))
+    switchMap((q) => this.api.search(q)),
   );
 }
 ```
@@ -352,21 +348,21 @@ For a full breakdown of subscription patterns, see the [RxJS Subscriptions post]
 
 ## Migration Cheat Sheet
 
-| Old pattern | Signal equivalent |
-|---|---|
-| `@Input() value: T` | `value = input<T>()` |
-| `@Input() value!: T` | `value = input.required<T>()` |
-| `@Output() change = new EventEmitter<T>()` | `change = output<T>()` |
-| `@Input() v` + `@Output() vChange` | `v = model<T>()` |
-| `@ViewChild(C) child!: C` | `child = viewChild.required(C)` |
-| `@ViewChildren(C) children!: QueryList<C>` | `children = viewChildren(C)` |
-| `@ContentChild(C) content!: C` | `content = contentChild.required(C)` |
-| `ngOnChanges` reacting to input | `computed()` or `effect()` on the input signal |
-| `ngAfterViewInit` accessing child | `effect()` reading `viewChild()` signal |
-| Writable derived state | `linkedSignal()` |
-| Reading without tracking | `untracked()` |
-| Observable to signal | `toSignal(obs$)` |
-| Signal to observable | `toObservable(sig)` |
+| Old pattern                                | Signal equivalent                              |
+| ------------------------------------------ | ---------------------------------------------- |
+| `@Input() value: T`                        | `value = input<T>()`                           |
+| `@Input() value!: T`                       | `value = input.required<T>()`                  |
+| `@Output() change = new EventEmitter<T>()` | `change = output<T>()`                         |
+| `@Input() v` + `@Output() vChange`         | `v = model<T>()`                               |
+| `@ViewChild(C) child!: C`                  | `child = viewChild.required(C)`                |
+| `@ViewChildren(C) children!: QueryList<C>` | `children = viewChildren(C)`                   |
+| `@ContentChild(C) content!: C`             | `content = contentChild.required(C)`           |
+| `ngOnChanges` reacting to input            | `computed()` or `effect()` on the input signal |
+| `ngAfterViewInit` accessing child          | `effect()` reading `viewChild()` signal        |
+| Writable derived state                     | `linkedSignal()`                               |
+| Reading without tracking                   | `untracked()`                                  |
+| Observable to signal                       | `toSignal(obs$)`                               |
+| Signal to observable                       | `toObservable(sig)`                            |
 
 ## Where to Go Next
 

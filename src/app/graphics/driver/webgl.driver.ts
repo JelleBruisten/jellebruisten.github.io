@@ -3,51 +3,51 @@ import { clamp } from "./clamp";
 import { darkModeColor, lightModeColor } from "./constant";
 
 /** Compiles a GLSL shader, returning the shader object or `null` on failure. */
-function compileShader(gl: WebGL2RenderingContext , source: string, type: GLenum) {
+function compileShader(gl: WebGL2RenderingContext, source: string, type: GLenum) {
   const shader = gl.createShader(type);
-  if(!shader) {
+  if (!shader) {
     return null;
   }
 
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error(gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      throw new Error('Failed to compile shader');
+    console.error(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    throw new Error("Failed to compile shader");
   }
   return shader;
 }
 
 /** Links a vertex + fragment shader into a program. Returns the program and a cleanup callback. */
-function createProgram(gl: WebGL2RenderingContext , vertexSource: string, fragmentSource: string) {
+function createProgram(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string) {
   const program = gl.createProgram();
-  if(!program) {
-    throw new Error('Failed to create a program');
+  if (!program) {
+    throw new Error("Failed to create a program");
   }
 
   const vertexShader = compileShader(gl, vertexSource, gl.VERTEX_SHADER);
   const fragmentShader = compileShader(gl, fragmentSource, gl.FRAGMENT_SHADER);
 
-  if(!vertexShader || !fragmentShader) {
-    throw new Error('Failed to compile shaders');
+  if (!vertexShader || !fragmentShader) {
+    throw new Error("Failed to compile shaders");
   }
 
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error(gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      throw new Error('Failed to link program');
+    console.error(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    throw new Error("Failed to link program");
   }
   return [
     program,
     () => {
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
-      gl.deleteShader(fragmentShader)
-    }
+      gl.deleteShader(fragmentShader);
+    },
   ] as const;
 }
 
@@ -60,27 +60,24 @@ function createProgram(gl: WebGL2RenderingContext , vertexSource: string, fragme
  * Resize is deferred to the next frame via pending dimensions to avoid clearing
  * the drawing buffer mid-frame (which would flash a blank frame).
  */
-export async function webGL2Driver(options: RenderProgramOptions): Promise<RenderProgramHandles | null> {
+export async function webGL2Driver(
+  options: RenderProgramOptions,
+): Promise<RenderProgramHandles | null> {
   const canvas = options.canvas;
   // Create a WebGL context
-  const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true }) as WebGL2RenderingContext;
+  const gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true }) as WebGL2RenderingContext;
 
-  if(!canvas || !gl) {
-    throw new Error('Failed get a canvas/webgl rendering context');
+  if (!canvas || !gl) {
+    throw new Error("Failed get a canvas/webgl rendering context");
   }
 
   // Resize the canvas to fit the window
   canvas.width = options.width;
   canvas.height = options.height;
 
-    // Vertex data for a full-screen quad
+  // Vertex data for a full-screen quad
   const vertices = new Float32Array([
-    -1.0, -1.0,
-    1.0, -1.0,
-    -1.0, 1.0,
-    -1.0, 1.0,
-    1.0, -1.0,
-    1.0, 1.0,
+    -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
   ]);
 
   // Create a buffer and upload the vertex data
@@ -100,10 +97,10 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
   const [program, cleanupProgram] = createProgram(gl, vertexSource, fragmentSource);
   // Look up attribute and uniform locations
-  const positionLocation = gl.getAttribLocation(program, 'a_position');
-  const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-  const timeLocation = gl.getUniformLocation(program, 'u_time');
-  const darkModeLocation = gl.getUniformLocation(program, 'u_darkmode');
+  const positionLocation = gl.getAttribLocation(program, "a_position");
+  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+  const timeLocation = gl.getUniformLocation(program, "u_time");
+  const darkModeLocation = gl.getUniformLocation(program, "u_darkmode");
 
   // Enable the position attribute
   gl.enableVertexAttribArray(positionLocation);
@@ -111,7 +108,10 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
   // darkmode
   gl.useProgram(program);
-  gl.uniform1f(darkModeLocation, clamp(options.settings["dark"] as number, darkModeColor, lightModeColor));
+  gl.uniform1f(
+    darkModeLocation,
+    clamp(options.settings["dark"] as number, darkModeColor, lightModeColor),
+  );
 
   // Render loop
   let rafHandle: number | null = null;
@@ -151,11 +151,11 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
     }
 
     if (paused || stopped) {
-        return; // Skip rendering while paused
+      return; // Skip rendering while paused
     }
 
     // Frame rate limiting — skip draw but keep RAF running
-    if (minFrameTime > 0 && (timestamp - lastRenderTime) < minFrameTime) {
+    if (minFrameTime > 0 && timestamp - lastRenderTime < minFrameTime) {
       rafHandle = requestAnimationFrame(render);
       return;
     }
@@ -186,7 +186,7 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
     options.onDraw?.();
 
     rafHandle = requestAnimationFrame(render);
-  }
+  };
   rafHandle = requestAnimationFrame(render);
 
   return {
@@ -197,8 +197,8 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
 
       // cancel the AnimationFrame
       if (rafHandle) {
-          cancelAnimationFrame(rafHandle);
-          rafHandle = null;
+        cancelAnimationFrame(rafHandle);
+        rafHandle = null;
       }
     },
     resume: () => {
@@ -215,7 +215,7 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
       pendingHeight = height;
     },
     stop: () => {
-      stopped = true
+      stopped = true;
       if (rafHandle) {
         cancelAnimationFrame(rafHandle);
         rafHandle = null;
@@ -224,15 +224,14 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
       // cleanup program
       cleanupProgram();
       gl.deleteBuffer(vertexBuffer);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
     },
     darkmode(dark) {
       gl.useProgram(program);
-      gl.uniform1f(darkModeLocation, clamp(dark, darkModeColor, lightModeColor))
+      gl.uniform1f(darkModeLocation, clamp(dark, darkModeColor, lightModeColor));
     },
     setFpsLimit(fps) {
       minFrameTime = fps > 0 ? 1000 / fps : 0;
-    }
+    },
   } satisfies RenderProgramHandles;
-
 }

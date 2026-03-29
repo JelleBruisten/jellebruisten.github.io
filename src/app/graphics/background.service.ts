@@ -4,35 +4,23 @@ import { Subject } from "rxjs";
 import { SpecialDayService } from "../settings/special-day.service";
 
 /** Standard backgrounds shown in the settings drawer and used for daily rotation. */
-const standardBackgrounds = [
-  'aurora',
-  'particles',
-  'perlin',
-  'snow',
-  'shapes',
-  'ocean',
-] as const;
+const standardBackgrounds = ["aurora", "particles", "perlin", "snow", "shapes", "ocean"] as const;
 
-/** Seasonal shaders only activated by SpecialDayService — not in daily rotation. */
-const specialBackgrounds = [
-  'fireworks',
-  'fireworks-orange',
-  'hearts',
-  'clovers',
-  'confetti',
-  'spooky',
-  'eggs',
-  'leaves',
-  'lights',
-] as const;
-
-const allBackgrounds = [... standardBackgrounds, ... specialBackgrounds] as const;
-
-type BackgroundName = typeof allBackgrounds[number];
+type BackgroundName =
+  | (typeof standardBackgrounds)[number]
+  | "fireworks"
+  | "fireworks-orange"
+  | "hearts"
+  | "clovers"
+  | "confetti"
+  | "spooky"
+  | "eggs"
+  | "leaves"
+  | "lights";
 
 interface BackgroundEvent {
-  type: 'pause' | 'resume' | 'stop',
-  data?: unknown | unknown[]
+  type: "pause" | "resume" | "stop";
+  data?: unknown | unknown[];
 }
 
 function pickDailyBackground(): BackgroundName {
@@ -49,7 +37,7 @@ function pickDailyBackground(): BackgroundName {
  * main thread / worker), and emits playback events (pause, resume, stop)
  * consumed by {@link BackgroundComponent}.
  */
-@Injectable({ providedIn: 'root'})
+@Injectable({ providedIn: "root" })
 export class BackgroundService {
   private readonly specialDay = inject(SpecialDayService);
 
@@ -58,7 +46,7 @@ export class BackgroundService {
     const theme = this.specialDay.theme();
     return (theme?.shader ?? pickDailyBackground()) as BackgroundName;
   });
-  readonly availableBackgrounds = [... standardBackgrounds];
+  readonly availableBackgrounds = [...standardBackgrounds];
 
   setBackground(name: BackgroundName): void {
     this.name.set(name);
@@ -68,27 +56,27 @@ export class BackgroundService {
   /** Switches the graphics API. If a specific type is given, sets it directly; otherwise toggles between WebGL and WebGPU. */
   toggleRendering(type?: RenderStrategyType) {
     const strategy = this.strategy();
-    if(!strategy ) {
+    if (!strategy) {
       return;
     }
 
-    if(typeof type === 'number') {
+    if (typeof type === "number") {
       this.strategy.set({
-        ... strategy,
-        type: type
+        ...strategy,
+        type: type,
       });
       return;
     }
 
-    if(strategy.type === RenderStrategyType.WebGL) {
+    if (strategy.type === RenderStrategyType.WebGL) {
       this.strategy.set({
-        ... strategy,
-        type: RenderStrategyType.WebGPU
+        ...strategy,
+        type: RenderStrategyType.WebGPU,
       });
     } else {
       this.strategy.set({
-        ... strategy,
-        type: RenderStrategyType.WebGL
+        ...strategy,
+        type: RenderStrategyType.WebGL,
       });
     }
   }
@@ -96,22 +84,22 @@ export class BackgroundService {
   /** Switches between main-thread and OffscreenCanvas worker rendering. Accepts an explicit value or toggles. */
   toggleWebworker(offscreenRendering?: boolean) {
     const strategy = this.strategy();
-    if(!strategy) {
+    if (!strategy) {
       return;
     }
 
-    if(typeof offscreenRendering === 'boolean') {
+    if (typeof offscreenRendering === "boolean") {
       this.strategy.set({
-        ... strategy,
-        offscreenRendering: offscreenRendering
+        ...strategy,
+        offscreenRendering: offscreenRendering,
       });
       return;
     }
 
     // else toggle
     this.strategy.set({
-      ... strategy,
-      offscreenRendering: !strategy.offscreenRendering
+      ...strategy,
+      offscreenRendering: !strategy.offscreenRendering,
     });
   }
 
@@ -119,12 +107,12 @@ export class BackgroundService {
 
   pause() {
     this.paused.set(true);
-    this.events$.next({ type: 'pause' });
+    this.events$.next({ type: "pause" });
   }
 
   resume() {
     this.paused.set(false);
-    this.events$.next({ type: 'resume' });
+    this.events$.next({ type: "resume" });
   }
 
   togglePlayback() {
@@ -137,7 +125,7 @@ export class BackgroundService {
 
   stop() {
     this.events$.next({
-      type: 'stop'
-    })
+      type: "stop",
+    });
   }
 }

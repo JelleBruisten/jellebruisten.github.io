@@ -1,25 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, inject, PLATFORM_ID } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DatePipe, isPlatformServer } from '@angular/common';
-import { Meta, Title } from '@angular/platform-browser';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
-import { BlogService } from '../../../services/blog.service';
-import { CloseIconComponent } from '../../../shared/icons/close-icon.component';
-import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.component';
+import { ChangeDetectionStrategy, Component, computed, inject, PLATFORM_ID } from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { DatePipe, isPlatformServer } from "@angular/common";
+import { Meta, Title } from "@angular/platform-browser";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { map } from "rxjs";
+import { BlogService } from "../../../services/blog.service";
+import { CloseIconComponent } from "../../../shared/icons/close-icon.component";
+import { ArrowRightIconComponent } from "../../../shared/icons/arrow-right-icon.component";
 
 @Component({
-  selector: 'app-blog-list',
+  selector: "app-blog-list",
   imports: [RouterLink, DatePipe, CloseIconComponent, ArrowRightIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-
       <!-- Header -->
-      <div class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl
-                  border border-slate-200/60 dark:border-slate-700/60 p-8 sm:p-12 mb-8">
-        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight
-                   text-slate-900 dark:text-white mb-4">
+      <div
+        class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-8 sm:p-12 mb-8"
+      >
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">
           Blog
         </h1>
         <p class="text-slate-600 dark:text-slate-400 text-lg">
@@ -31,11 +30,10 @@ import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.
       @if (activeTag()) {
         <div class="flex items-center gap-3 mb-6">
           <span class="text-sm text-slate-600 dark:text-slate-400">Filtered by:</span>
-          <button (click)="clearTag()"
-                  class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full
-                         bg-brand/15 dark:bg-brand-light/15
-                         text-brand-dark dark:text-brand-light
-                         hover:bg-brand/25 dark:hover:bg-brand-light/25 transition-colors">
+          <button
+            (click)="clearTag()"
+            class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full bg-brand/15 dark:bg-brand-light/15 text-brand-dark dark:text-brand-light hover:bg-brand/25 dark:hover:bg-brand-light/25 transition-colors"
+          >
             {{ activeTag() }}
             <app-close-icon class="text-[13px]" />
           </button>
@@ -45,32 +43,33 @@ import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.
       <!-- Post list -->
       <div class="space-y-4">
         @for (post of posts(); track post.slug) {
-          <a [routerLink]="['/blog', post.slug]"
-             class="group block bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl
-                    border border-slate-200/60 dark:border-slate-700/60 p-6 sm:p-8
-                    hover:border-brand/40 dark:hover:border-brand-light/40
-                    hover:bg-brand/5 dark:hover:bg-brand-light/5
-                    transition-all">
-
+          <a
+            [routerLink]="['/blog', post.slug]"
+            class="group block bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-6 sm:p-8 hover:border-brand/40 dark:hover:border-brand-light/40 hover:bg-brand/5 dark:hover:bg-brand-light/5 transition-all"
+          >
             <div class="flex items-start justify-between gap-4 flex-wrap">
               <div class="flex-1 min-w-0">
-
                 <!-- Tags -->
                 @if (post.tags.length > 0) {
                   <div class="flex flex-wrap gap-2 mb-3">
                     @for (tag of post.tags; track tag) {
-                      <button (click)="filterByTag(tag, $event)"
-                              [class]="tag === activeTag()
-                                ? 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors ring-1 ring-inset ring-brand-dark dark:ring-brand-light bg-brand/15 dark:bg-brand-light/15 text-brand-dark dark:text-brand-light'
-                                : 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors bg-brand/8 dark:bg-brand-light/8 text-brand-dark dark:text-brand-light hover:bg-brand/20 dark:hover:bg-brand-light/20'">
+                      <button
+                        (click)="filterByTag(tag, $event)"
+                        [class]="
+                          tag === activeTag()
+                            ? 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors ring-1 ring-inset ring-brand-dark dark:ring-brand-light bg-brand/15 dark:bg-brand-light/15 text-brand-dark dark:text-brand-light'
+                            : 'cursor-pointer text-xs font-medium px-2.5 py-1 rounded-full transition-colors bg-brand/8 dark:bg-brand-light/8 text-brand-dark dark:text-brand-light hover:bg-brand/20 dark:hover:bg-brand-light/20'
+                        "
+                      >
                         {{ tag }}
                       </button>
                     }
                   </div>
                 }
 
-                <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2
-                           group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors">
+                <h2
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-brand-dark dark:group-hover:text-brand-light transition-colors"
+                >
                   {{ post.title }}
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
@@ -80,19 +79,16 @@ import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.
 
               <!-- Arrow -->
               <app-arrow-right-icon
-                   class="shrink-0 mt-1 text-[20px] text-slate-300 dark:text-slate-600
-                          group-hover:text-brand-dark dark:group-hover:text-brand-light
-                          group-hover:translate-x-1 transition-all"
-                   aria-hidden="true" />
+                class="shrink-0 mt-1 text-[20px] text-slate-300 dark:text-slate-600 group-hover:text-brand-dark dark:group-hover:text-brand-light group-hover:translate-x-1 transition-all"
+                aria-hidden="true"
+              />
             </div>
 
             <div class="mt-4 text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ post.date | date:'longDate' }} &middot; {{ post.readTime }} min read
+              {{ post.date | date: "longDate" }} &middot; {{ post.readTime }} min read
             </div>
           </a>
-        }
-
-        @empty {
+        } @empty {
           <div class="text-center py-20 text-slate-600 dark:text-slate-400">
             @if (activeTag()) {
               No posts tagged "{{ activeTag() }}".
@@ -107,26 +103,28 @@ import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.
 })
 /** Filterable blog post listing with tag-based query param navigation. */
 export class BlogListComponent {
-  private blog   = inject(BlogService);
+  private blog = inject(BlogService);
   private router = inject(Router);
-  private route  = inject(ActivatedRoute);
+  private route = inject(ActivatedRoute);
 
   constructor() {
     if (isPlatformServer(inject(PLATFORM_ID))) {
-      inject(Title).setTitle('Blog — Jelle Bruisten');
-      inject(Meta).updateTag({ name: 'description', content: 'Thoughts on Angular, TypeScript, WebGPU, and building things on the web.' });
+      inject(Title).setTitle("Blog — Jelle Bruisten");
+      inject(Meta).updateTag({
+        name: "description",
+        content: "Thoughts on Angular, TypeScript, WebGPU, and building things on the web.",
+      });
     }
   }
 
-  protected activeTag = toSignal(
-    this.route.queryParamMap.pipe(map(p => p.get('tag') ?? '')),
-    { initialValue: '' }
-  );
+  protected activeTag = toSignal(this.route.queryParamMap.pipe(map((p) => p.get("tag") ?? "")), {
+    initialValue: "",
+  });
 
   protected posts = computed(() => {
     const tag = this.activeTag();
-    const all  = this.blog.getAllPosts();
-    return tag ? all.filter(p => p.tags.includes(tag)) : all;
+    const all = this.blog.getAllPosts();
+    return tag ? all.filter((p) => p.tags.includes(tag)) : all;
   });
 
   protected filterByTag(tag: string, event: MouseEvent): void {
@@ -135,7 +133,7 @@ export class BlogListComponent {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tag: this.activeTag() === tag ? null : tag },
-      queryParamsHandling: 'merge',
+      queryParamsHandling: "merge",
     });
   }
 
@@ -143,7 +141,7 @@ export class BlogListComponent {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tag: null },
-      queryParamsHandling: 'merge',
+      queryParamsHandling: "merge",
     });
   }
 }

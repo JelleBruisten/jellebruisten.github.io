@@ -34,13 +34,13 @@ Always feature-detect. Provide a WebGL path as a fallback for browsers that don'
 ## Bootstrapping a WebGPU Context
 
 ```typescript
-const canvas  = document.createElement('canvas');
+const canvas = document.createElement("canvas");
 const adapter = await navigator.gpu.requestAdapter();
-const device  = await adapter!.requestDevice();
-const context = canvas.getContext('webgpu')!;
+const device = await adapter!.requestDevice();
+const context = canvas.getContext("webgpu")!;
 
 const format = navigator.gpu.getPreferredCanvasFormat();
-context.configure({ device, format, alphaMode: 'premultiplied' });
+context.configure({ device, format, alphaMode: "premultiplied" });
 ```
 
 `GPUDevice` is your main handle to the GPU. Everything — buffers, textures, pipelines — is created through it.
@@ -79,10 +79,10 @@ fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
 const module = device.createShaderModule({ code: wgslSource });
 
 const pipeline = device.createRenderPipeline({
-  layout: 'auto',
-  vertex:   { module, entryPoint: 'vs' },
-  fragment: { module, entryPoint: 'fs', targets: [{ format }] },
-  primitive: { topology: 'triangle-list' },
+  layout: "auto",
+  vertex: { module, entryPoint: "vs" },
+  fragment: { module, entryPoint: "fs", targets: [{ format }] },
+  primitive: { topology: "triangle-list" },
 });
 ```
 
@@ -111,28 +111,32 @@ const bindGroup = device.createBindGroup({
 
 ```typescript
 function frame(time: number) {
-    // Update uniform buffer
-    device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([
-      canvas.width, canvas.height, time / 1000
-    ]));
+  // Update uniform buffer
+  device.queue.writeBuffer(
+    uniformBuffer,
+    0,
+    new Float32Array([canvas.width, canvas.height, time / 1000]),
+  );
 
-    const encoder = device.createCommandEncoder();
-    const pass    = encoder.beginRenderPass({
-        colorAttachments: [{
-            view:       context.getCurrentTexture().createView(),
-            loadOp:     'clear',
-            clearValue: { r: 0, g: 0, b: 0, a: 1 },
-            storeOp:    'store',
-        }]
-    });
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: context.getCurrentTexture().createView(),
+        loadOp: "clear",
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        storeOp: "store",
+      },
+    ],
+  });
 
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.draw(6); // two triangles = full-screen quad
-    pass.end();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(6); // two triangles = full-screen quad
+  pass.end();
 
-    device.queue.submit([encoder.finish()]);
-    requestAnimationFrame(frame);
+  device.queue.submit([encoder.finish()]);
+  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 ```
@@ -148,8 +152,8 @@ worker.postMessage({ canvas: offscreen }, [offscreen]);
 
 // worker
 self.onmessage = async ({ data }) => {
-    const context = data.canvas.getContext('webgpu');
-    // ... same setup as above
+  const context = data.canvas.getContext("webgpu");
+  // ... same setup as above
 };
 ```
 

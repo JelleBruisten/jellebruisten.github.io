@@ -40,6 +40,7 @@ script-src 'self' 'nonce-abc123'
 ```
 
 Common values:
+
 - `'self'` — scripts from the same origin only
 - `'none'` — no scripts at all
 - `'nonce-{value}'` — allow a specific script tag that carries the matching nonce attribute
@@ -141,12 +142,10 @@ Angular 16+ supports nonces via the `ngCspNonce` attribute on the root element. 
 Angular reads this attribute at bootstrap time and applies the nonce to any inline styles it injects. Alternatively, provide it via the `CSP_NONCE` injection token:
 
 ```typescript
-import { CSP_NONCE } from '@angular/core';
+import { CSP_NONCE } from "@angular/core";
 
 bootstrapApplication(AppComponent, {
-  providers: [
-    { provide: CSP_NONCE, useValue: globalThis.myServerNonce }
-  ]
+  providers: [{ provide: CSP_NONCE, useValue: globalThis.myServerNonce }],
 });
 ```
 
@@ -210,8 +209,8 @@ Content-Security-Policy: require-trusted-types-for 'script'
 To write to a sink, you create a policy and use it to produce a typed value:
 
 ```typescript
-const policy = trustedTypes.createPolicy('my-policy', {
-  createHTML: (input: string) => DOMPurify.sanitize(input)
+const policy = trustedTypes.createPolicy("my-policy", {
+  createHTML: (input: string) => DOMPurify.sanitize(input),
 });
 
 element.innerHTML = policy.createHTML(userInput);

@@ -26,10 +26,9 @@ type Settings = Record<string, boolean | number>;
  * the previous program before starting a new one.
  */
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class BackgroundProgramManager {
-
   private readonly document = inject(DOCUMENT);
   private readonly runtime = inject(GraphicsRuntime);
   private readonly settings = inject(SettingsService);
@@ -76,7 +75,7 @@ export class BackgroundProgramManager {
    * Returns the active {@link ProgramRef}, or the existing one if name and strategy are unchanged.
    */
   async startProgram(name: string, renderStrategy?: RenderStrategy | null, settings?: Settings) {
-    if(!renderStrategy) {
+    if (!renderStrategy) {
       renderStrategy = this.runtime.getRecommendedRenderStrategy();
     }
 
@@ -89,8 +88,17 @@ export class BackgroundProgramManager {
    * changed, creates a new canvas (half-res on mobile), and delegates to
    * offscreen or main-thread initialization.
    */
-  private async startProgramHelper(name: string, renderStrategy: RenderStrategy, settings?: Settings) {
-    if(this.currentProgram && this.currentProgram.name === name && this.currentProgram.strategy.offscreenRendering === renderStrategy.offscreenRendering && this.currentProgram.strategy.type == renderStrategy.type) {
+  private async startProgramHelper(
+    name: string,
+    renderStrategy: RenderStrategy,
+    settings?: Settings,
+  ) {
+    if (
+      this.currentProgram &&
+      this.currentProgram.name === name &&
+      this.currentProgram.strategy.offscreenRendering === renderStrategy.offscreenRendering &&
+      this.currentProgram.strategy.type == renderStrategy.type
+    ) {
       return this.currentProgram;
     }
 
@@ -100,22 +108,34 @@ export class BackgroundProgramManager {
     const scale = 1.0;
 
     // create a new canvas and apply current window size
-    const canvas = this.document.createElement('canvas');
+    const canvas = this.document.createElement("canvas");
     canvas.height = Math.round(window.innerHeight * scale);
     canvas.width = Math.round(window.innerWidth * scale);
-    canvas.style.display = 'block';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.pointerEvents = 'none';
+    canvas.style.display = "block";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.pointerEvents = "none";
 
     // program handles/worker references
     let programHandles: RenderProgramHandles | null = null;
 
     // start program either offscreen or normally
-    if(renderStrategy.offscreenRendering) {
-      programHandles = await this.startProgramOffscreen(name, canvas, renderStrategy, settings, scale);
+    if (renderStrategy.offscreenRendering) {
+      programHandles = await this.startProgramOffscreen(
+        name,
+        canvas,
+        renderStrategy,
+        settings,
+        scale,
+      );
     } else {
-      programHandles = await this.startProgramNormally(name, canvas, renderStrategy, settings, scale);
+      programHandles = await this.startProgramNormally(
+        name,
+        canvas,
+        renderStrategy,
+        settings,
+        scale,
+      );
       this.startDrawFpsMeasurement();
     }
 
@@ -131,7 +151,7 @@ export class BackgroundProgramManager {
         programHandles?.stop();
         canvas?.remove();
         cleanupController?.abort();
-      }
+      },
     };
 
     if (this.settings.debugLogs()) {
@@ -149,43 +169,56 @@ export class BackgroundProgramManager {
    * to the shared Web Worker. Returns a {@link RenderProgramHandles} proxy
    * that forwards all control messages via `postMessage`.
    */
-  private async startProgramOffscreen(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
+  private async startProgramOffscreen(
+    shaderName: string,
+    canvas: HTMLCanvasElement,
+    renderStrategy: RenderStrategy,
+    settings: Settings = {},
+    scale = 1.0,
+  ) {
     // worker
     const worker = this.getWorker();
 
     // setup program
     const offscreen = canvas.transferControlToOffscreen();
-    worker.postMessage({
-      canvas: offscreen,
-      strategy: renderStrategy,
-      width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
-      height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
-      shaderName: shaderName,
-      settings: settings,
-      type: 'init'
-    }, [offscreen]);
+    worker.postMessage(
+      {
+        canvas: offscreen,
+        strategy: renderStrategy,
+        width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
+        height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
+        shaderName: shaderName,
+        settings: settings,
+        type: "init",
+      },
+      [offscreen],
+    );
 
     // setup worker
     const programHandles: RenderProgramHandles = {
       stop: () => {
-        worker?.postMessage({ type: 'stop'})
+        worker?.postMessage({ type: "stop" });
       },
       resume: () => {
-        worker?.postMessage({ type: 'resume'})
+        worker?.postMessage({ type: "resume" });
       },
       pause: () => {
-        worker?.postMessage({ type: 'pause' })
+        worker?.postMessage({ type: "pause" });
       },
       resize: (width: number, height: number) => {
-        worker?.postMessage({ type: 'resize', width: Math.round(width * scale), height: Math.round(height * scale)})
+        worker?.postMessage({
+          type: "resize",
+          width: Math.round(width * scale),
+          height: Math.round(height * scale),
+        });
       },
       darkmode: (dark) => {
-        worker?.postMessage({ type: 'darkmode', dark: dark});
+        worker?.postMessage({ type: "darkmode", dark: dark });
       },
       setFpsLimit: (fps) => {
-        worker?.postMessage({ type: 'fpsLimit', fps: fps});
-      }
-    }
+        worker?.postMessage({ type: "fpsLimit", fps: fps });
+      },
+    };
 
     return programHandles;
   }
@@ -193,9 +226,9 @@ export class BackgroundProgramManager {
   /** Lazily creates and returns the shared Web Worker, listening for FPS reports. */
   private getWorker() {
     if (!this.worker) {
-      this.worker = new Worker(new URL('./driver/driver.worker', import.meta.url));
+      this.worker = new Worker(new URL("./driver/driver.worker", import.meta.url));
       this.worker.onmessage = (evt) => {
-        if (evt.data.type === 'drawFps') {
+        if (evt.data.type === "drawFps") {
           this.drawFps.set(evt.data.fps);
         }
       };
@@ -208,7 +241,13 @@ export class BackgroundProgramManager {
    * driver (WebGL or WebGPU). Wraps resize calls to apply the resolution scale
    * factor when rendering at half resolution on mobile.
    */
-  private async startProgramNormally(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
+  private async startProgramNormally(
+    shaderName: string,
+    canvas: HTMLCanvasElement,
+    renderStrategy: RenderStrategy,
+    settings: Settings = {},
+    scale = 1.0,
+  ) {
     let programHandles: RenderProgramHandles | null = null;
     const options = {
       canvas: canvas,
@@ -216,30 +255,41 @@ export class BackgroundProgramManager {
       height: Math.round((document.defaultView?.innerHeight ?? 300) * scale),
       width: Math.round((document.defaultView?.innerWidth ?? 300) * scale),
       settings: settings,
-      onDraw: () => { this.drawCount++; }
-    } as const
+      onDraw: () => {
+        this.drawCount++;
+      },
+    } as const;
 
     try {
-      switch(renderStrategy.type) {
-        case RenderStrategyType.WebGL: {
-          const shaderSource = await this.resolveShader(`${shaderName}.glsl`);
-          programHandles = await import('./driver/webgl.driver').then(async (x) => x.webGL2Driver({
-            ...options,
-            shaderSource: shaderSource
-          }));
-        }
-        break;
-        case RenderStrategyType.WebGPU: {
-          const shaderSource = await this.resolveShader(`${shaderName}.wgsl`);
-          programHandles = await import('./driver/webgpu.driver').then(async (x) => x.webGPUDriver({
-            ...options,
-            shaderSource: shaderSource
-          }));
-        }
-        break;
+      switch (renderStrategy.type) {
+        case RenderStrategyType.WebGL:
+          {
+            const shaderSource = await this.resolveShader(`${shaderName}.glsl`);
+            programHandles = await import("./driver/webgl.driver").then(async (x) =>
+              x.webGL2Driver({
+                ...options,
+                shaderSource: shaderSource,
+              }),
+            );
+          }
+          break;
+        case RenderStrategyType.WebGPU:
+          {
+            const shaderSource = await this.resolveShader(`${shaderName}.wgsl`);
+            programHandles = await import("./driver/webgpu.driver").then(async (x) =>
+              x.webGPUDriver({
+                ...options,
+                shaderSource: shaderSource,
+              }),
+            );
+          }
+          break;
       }
     } catch (err) {
-      console.error(`[BackgroundProgramManager] Failed to start ${renderStrategy.type === RenderStrategyType.WebGPU ? 'WebGPU' : 'WebGL'} driver for "${shaderName}":`, err);
+      console.error(
+        `[BackgroundProgramManager] Failed to start ${renderStrategy.type === RenderStrategyType.WebGPU ? "WebGPU" : "WebGL"} driver for "${shaderName}":`,
+        err,
+      );
       return null;
     }
 
@@ -247,7 +297,8 @@ export class BackgroundProgramManager {
       const originalResize = programHandles.resize;
       programHandles = {
         ...programHandles,
-        resize: (w: number, h: number) => originalResize(Math.round(w * scale), Math.round(h * scale))
+        resize: (w: number, h: number) =>
+          originalResize(Math.round(w * scale), Math.round(h * scale)),
       };
     }
 
@@ -261,7 +312,7 @@ export class BackgroundProgramManager {
   prefetchShader(backgroundName: string) {
     const strategyType = this.currentProgram?.strategy?.type;
     if (strategyType == null) return;
-    const ext = strategyType === RenderStrategyType.WebGPU ? '.wgsl' : '.glsl';
+    const ext = strategyType === RenderStrategyType.WebGPU ? ".wgsl" : ".glsl";
     this.resolveShader(`${backgroundName}${ext}`);
   }
 
@@ -271,24 +322,23 @@ export class BackgroundProgramManager {
   prefetchStrategy(strategyType: RenderStrategyType) {
     const name = this.currentProgram?.name;
     if (!name) return;
-    const ext = strategyType === RenderStrategyType.WebGPU ? '.wgsl' : '.glsl';
+    const ext = strategyType === RenderStrategyType.WebGPU ? ".wgsl" : ".glsl";
     this.resolveShader(`${name}${ext}`);
   }
 
   /** Fetches a shader file by name, returning a cached copy if available. */
   private async resolveShader(shaderName: string) {
     // lazy create map
-    if(this.shaderCache && this.shaderCache.has(shaderName)) {
+    if (this.shaderCache && this.shaderCache.has(shaderName)) {
       const cached = this.shaderCache.get(shaderName);
 
-      if(cached) {
+      if (cached) {
         return cached;
       }
     }
 
     const shaderSource = await fetch(`./shaders/${shaderName}`).then((x) => x.text());
-    if(shaderSource) {
-
+    if (shaderSource) {
       // lazily create the cache if it does not exist
       this.shaderCache ??= new Map<string, string>();
 

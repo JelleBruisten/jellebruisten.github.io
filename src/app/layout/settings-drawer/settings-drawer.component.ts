@@ -1,114 +1,154 @@
-import { ChangeDetectionStrategy, Component, inject, isDevMode, signal } from '@angular/core';
-import { BackgroundService } from '../../graphics/background.service';
-import { BackgroundProgramManager } from '../../graphics/manager';
-import { GraphicsRuntime } from '../../graphics/runtime';
-import { SettingsService } from '../../settings/setting.service';
-import { SpecialDayService } from '../../settings/special-day.service';
-import { CloseIconComponent } from '../../shared/icons/close-icon.component';
-import { GearIconComponent } from '../../shared/icons/gear-icon.component';
+import { ChangeDetectionStrategy, Component, inject, isDevMode, signal } from "@angular/core";
+import { BackgroundService } from "../../graphics/background.service";
+import { BackgroundProgramManager } from "../../graphics/manager";
+import { GraphicsRuntime } from "../../graphics/runtime";
+import { SettingsService } from "../../settings/setting.service";
+import { SpecialDayService } from "../../settings/special-day.service";
+import { CloseIconComponent } from "../../shared/icons/close-icon.component";
+import { GearIconComponent } from "../../shared/icons/gear-icon.component";
 
 @Component({
-  selector: 'app-settings-drawer',
+  selector: "app-settings-drawer",
   imports: [CloseIconComponent, GearIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .open-btn {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      z-index: 50;
-      height: 2.75rem;
-      padding: 0 0.875rem;
-      border-radius: 9999px;
-      background: rgba(15,23,42,0.9);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(148,163,184,0.2);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      color: rgba(148,163,184,1);
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.75rem;
-      font-weight: 500;
-      white-space: nowrap;
-      transition: color 0.15s;
-    }
-    .open-btn:hover { color: #fff; }
-    .open-btn:focus-visible { outline: 2px solid oklch(0.62 0.19 272); outline-offset: 2px; }
-    .backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-    }
-    .drawer {
-      position: fixed;
-      top: 0;
-      right: 0;
-      height: 100%;
-      width: 20rem;
-      z-index: 50;
-      background: rgba(2,6,23,0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-left: 1px solid rgba(148,163,184,0.15);
-      box-shadow: -20px 0 60px rgba(0,0,0,0.5);
-      overflow-y: auto;
-      transition: transform 0.3s ease-in-out;
-    }
-    .drawer-inner { padding: 1.5rem; }
-    .drawer-title {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 1.5rem;
-      margin-top: 0.5rem;
-    }
-    .section { margin-bottom: 1.5rem; }
-    .section-label {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(148,163,184,1);
-      margin-bottom: 0.75rem;
-    }
-    .btn-group { display: flex; gap: 0.5rem; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.375rem; }
-    .grid-5 .opt-btn { font-size: 0.6875rem; padding: 0.375rem 0; }
-    .opt-btn {
-      flex: 1;
-      padding: 0.5rem 0;
-      font-size: 0.875rem;
-      border-radius: 0.5rem;
-      background: rgba(30,41,59,0.8);
-      color: rgba(148,163,184,1);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      font-family: inherit;
-    }
-    .opt-btn:hover { background: rgba(51,65,85,0.8); color: #fff; }
-    .opt-btn.active {
-      background: rgba(99,102,241,0.15);
-      border-color: oklch(0.62 0.19 272);
-      color: oklch(0.72 0.17 272);
-    }
-    .opt-btn:focus-visible { outline: 2px solid oklch(0.62 0.19 272); outline-offset: 2px; }
-    .opt-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  `],
+  styles: [
+    `
+      .open-btn {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+        height: 2.75rem;
+        padding: 0 0.875rem;
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: rgba(148, 163, 184, 1);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: color 0.15s;
+      }
+      .open-btn:hover {
+        color: #fff;
+      }
+      .open-btn:focus-visible {
+        outline: 2px solid oklch(0.62 0.19 272);
+        outline-offset: 2px;
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 20rem;
+        z-index: 50;
+        background: rgba(2, 6, 23, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-left: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        transition: transform 0.3s ease-in-out;
+      }
+      .drawer-inner {
+        padding: 1.5rem;
+      }
+      .drawer-title {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
+      }
+      .section {
+        margin-bottom: 1.5rem;
+      }
+      .section-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(148, 163, 184, 1);
+        margin-bottom: 0.75rem;
+      }
+      .btn-group {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+      }
+      .grid-5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.375rem;
+      }
+      .grid-5 .opt-btn {
+        font-size: 0.6875rem;
+        padding: 0.375rem 0;
+      }
+      .opt-btn {
+        flex: 1;
+        padding: 0.5rem 0;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+        background: rgba(30, 41, 59, 0.8);
+        color: rgba(148, 163, 184, 1);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        font-family: inherit;
+      }
+      .opt-btn:hover {
+        background: rgba(51, 65, 85, 0.8);
+        color: #fff;
+      }
+      .opt-btn.active {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: oklch(0.62 0.19 272);
+        color: oklch(0.72 0.17 272);
+      }
+      .opt-btn:focus-visible {
+        outline: 2px solid oklch(0.62 0.19 272);
+        outline-offset: 2px;
+      }
+      .opt-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+    `,
+  ],
   template: `
     <!-- Background name pill — click to open settings -->
-    <button class="open-btn"
+    <button
+      class="open-btn"
       (click)="open.set(!open())"
       [attr.aria-expanded]="open()"
-      [attr.aria-label]="open() ? 'Close settings' : 'Open settings — current background: ' + bgService.name()">
+      [attr.aria-label]="
+        open() ? 'Close settings' : 'Open settings — current background: ' + bgService.name()
+      "
+    >
       @if (open()) {
         <app-close-icon class="text-[16px]" />
       } @else {
@@ -123,11 +163,13 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
     }
 
     <!-- Drawer panel -->
-    <aside class="drawer"
+    <aside
+      class="drawer"
       [style.transform]="open() ? 'translateX(0)' : 'translateX(100%)'"
       aria-label="Settings panel"
       [attr.aria-hidden]="!open()"
-      [attr.inert]="!open() ? '' : null">
+      [attr.inert]="!open() ? '' : null"
+    >
       <div class="drawer-inner">
         <h2 class="drawer-title">Settings</h2>
 
@@ -139,7 +181,8 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
               <button
                 [class.active]="settings.dark() === opt.value"
                 class="opt-btn"
-                (click)="settings.dark.set(opt.value)">
+                (click)="settings.dark.set(opt.value)"
+              >
                 {{ opt.label }}
               </button>
             }
@@ -155,7 +198,8 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
                 [class.active]="bgService.name() === bg"
                 class="opt-btn"
                 (mouseenter)="programManager.prefetchShader(bg)"
-                (click)="bgService.name.set(bg)">
+                (click)="bgService.name.set(bg)"
+              >
                 {{ bg }}
               </button>
             }
@@ -165,22 +209,42 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
         <!-- Renderer -->
         <section class="section" aria-labelledby="renderer-label">
           <p id="renderer-label" class="section-label">Renderer</p>
-          <div class="btn-group" style="margin-bottom:0.5rem" role="group" aria-label="Graphics API">
-            <button [class.active]="bgService.strategy()?.type === 0" class="opt-btn"
-                    [disabled]="!runtime.supportsWebGL()"
-                    (mouseenter)="programManager.prefetchStrategy(0)"
-                    (click)="bgService.toggleRendering(0)">WebGL</button>
-            <button [class.active]="bgService.strategy()?.type === 1" class="opt-btn"
-                    [disabled]="!runtime.supportsWebGPU()"
-                    (mouseenter)="programManager.prefetchStrategy(1)"
-                    (click)="bgService.toggleRendering(1)">WebGPU</button>
+          <div class="btn-group" style="margin-bottom: 0.5rem" role="group" aria-label="Graphics API">
+            <button
+              [class.active]="bgService.strategy()?.type === 0"
+              class="opt-btn"
+              [disabled]="!runtime.supportsWebGL()"
+              (mouseenter)="programManager.prefetchStrategy(0)"
+              (click)="bgService.toggleRendering(0)"
+            >
+              WebGL
+            </button>
+            <button
+              [class.active]="bgService.strategy()?.type === 1"
+              class="opt-btn"
+              [disabled]="!runtime.supportsWebGPU()"
+              (mouseenter)="programManager.prefetchStrategy(1)"
+              (click)="bgService.toggleRendering(1)"
+            >
+              WebGPU
+            </button>
           </div>
           <div class="btn-group" role="group" aria-label="Thread mode">
-            <button [class.active]="bgService.strategy()?.offscreenRendering === false" class="opt-btn"
-                    (click)="bgService.toggleWebworker(false)">Main</button>
-            <button [class.active]="bgService.strategy()?.offscreenRendering === true" class="opt-btn"
-                    [disabled]="!runtime.supportsOffscreen()"
-                    (click)="bgService.toggleWebworker(true)">Worker</button>
+            <button
+              [class.active]="bgService.strategy()?.offscreenRendering === false"
+              class="opt-btn"
+              (click)="bgService.toggleWebworker(false)"
+            >
+              Main
+            </button>
+            <button
+              [class.active]="bgService.strategy()?.offscreenRendering === true"
+              class="opt-btn"
+              [disabled]="!runtime.supportsOffscreen()"
+              (click)="bgService.toggleWebworker(true)"
+            >
+              Worker
+            </button>
           </div>
         </section>
 
@@ -192,7 +256,8 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
               <button
                 [class.active]="settings.fpsLimit() === opt.value"
                 class="opt-btn"
-                (click)="settings.fpsLimit.set(opt.value)">
+                (click)="settings.fpsLimit.set(opt.value)"
+              >
                 {{ opt.label }}
               </button>
             }
@@ -203,8 +268,20 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
         <section class="section" aria-labelledby="debug-label">
           <p id="debug-label" class="section-label">Debug</p>
           <div class="btn-group">
-            <button class="opt-btn" [class.active]="settings.showFps()" (click)="settings.showFps.set(!settings.showFps())">FPS Counter</button>
-            <button class="opt-btn" [class.active]="settings.debugLogs()" (click)="settings.debugLogs.set(!settings.debugLogs())">Debug Logs</button>
+            <button
+              class="opt-btn"
+              [class.active]="settings.showFps()"
+              (click)="settings.showFps.set(!settings.showFps())"
+            >
+              FPS Counter
+            </button>
+            <button
+              class="opt-btn"
+              [class.active]="settings.debugLogs()"
+              (click)="settings.debugLogs.set(!settings.debugLogs())"
+            >
+              Debug Logs
+            </button>
           </div>
         </section>
 
@@ -213,19 +290,32 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
           <section class="section" aria-labelledby="special-day-label">
             <p id="special-day-label" class="section-label">Special Day (Dev)</p>
             <div class="grid-5" role="group" aria-label="Special day override">
-              <button [class.active]="specialDay.devOverride() === null" class="opt-btn"
-                      (click)="specialDay.devOverride.set(null)">Auto</button>
-              <button [class.active]="specialDay.devOverride() === 'none'" class="opt-btn"
-                      (click)="specialDay.devOverride.set('none')">None</button>
+              <button
+                [class.active]="specialDay.devOverride() === null"
+                class="opt-btn"
+                (click)="specialDay.devOverride.set(null)"
+              >
+                Auto
+              </button>
+              <button
+                [class.active]="specialDay.devOverride() === 'none'"
+                class="opt-btn"
+                (click)="specialDay.devOverride.set('none')"
+              >
+                None
+              </button>
               @for (day of specialDay.availableDays; track day.value) {
-                <button [class.active]="specialDay.devOverride() === day.value" class="opt-btn"
-                        (click)="specialDay.devOverride.set(day.value)">
+                <button
+                  [class.active]="specialDay.devOverride() === day.value"
+                  class="opt-btn"
+                  (click)="specialDay.devOverride.set(day.value)"
+                >
                   {{ day.label }}
                 </button>
               }
             </div>
             @if (specialDay.effectiveDay(); as day) {
-              <p style="margin-top:0.5rem;font-size:0.6875rem;color:rgba(148,163,184,0.7)">
+              <p style="margin-top: 0.5rem; font-size: 0.6875rem; color: rgba(148, 163, 184, 0.7)">
                 Active: {{ day }}
               </p>
             }
@@ -237,11 +327,10 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
           <p id="playback-label" class="section-label">Playback</p>
           <div class="btn-group">
             <button class="opt-btn" (click)="bgService.togglePlayback()">
-              {{ bgService.paused() ? '▶ Play' : '⏸ Pause' }}
+              {{ bgService.paused() ? "▶ Play" : "⏸ Pause" }}
             </button>
           </div>
         </section>
-
       </div>
     </aside>
   `,
@@ -263,16 +352,15 @@ export class SettingsDrawerComponent {
   protected isDevMode = isDevMode();
 
   protected darkOpts = [
-    { value: 0, label: 'Auto' },
-    { value: 1, label: 'Light' },
-    { value: 2, label: 'Dark' },
+    { value: 0, label: "Auto" },
+    { value: 1, label: "Light" },
+    { value: 2, label: "Dark" },
   ] as const;
 
   protected fpsOpts = [
-    { value: 60,  label: '60' },
-    { value: 120, label: '120' },
-    { value: 180, label: '180' },
-    { value: 0,   label: '∞' },
+    { value: 60, label: "60" },
+    { value: 120, label: "120" },
+    { value: 180, label: "180" },
+    { value: 0, label: "∞" },
   ] as const;
-
 }

@@ -10,7 +10,7 @@ import { RenderStrategy, RenderStrategyType } from "./types";
  * offscreen rendering when the browser supports it.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class GraphicsRuntime {
   private readonly document = inject(DOCUMENT);
@@ -19,12 +19,14 @@ export class GraphicsRuntime {
 
   /** Returns `true` if both `OffscreenCanvas` and Web Workers are available. */
   supportsOffscreen() {
-    return this.window && 'OffscreenCanvas' in this.window && typeof this.window.Worker !== 'undefined';
+    return (
+      this.window && "OffscreenCanvas" in this.window && typeof this.window.Worker !== "undefined"
+    );
   }
 
   /** Returns `true` if `navigator.gpu` is present. */
   supportsWebGPU() {
-    return this.navigator && 'gpu' in this.navigator;
+    return this.navigator && "gpu" in this.navigator;
   }
 
   /**
@@ -32,7 +34,7 @@ export class GraphicsRuntime {
    * Immediately releases the context to avoid hitting the browser's context limit.
    */
   supportsWebGL() {
-    if(!this.document) {
+    if (!this.document) {
       return false;
     }
 
@@ -44,7 +46,7 @@ export class GraphicsRuntime {
 
     // Release the context immediately to avoid hitting the browser's context limit
     if (supported) {
-      (gl as WebGLRenderingContext).getExtension('WEBGL_lose_context')?.loseContext();
+      (gl as WebGLRenderingContext).getExtension("WEBGL_lose_context")?.loseContext();
     }
 
     return supported;
@@ -60,8 +62,8 @@ export class GraphicsRuntime {
 
     return {
       type: type,
-      offscreenRendering: offscreenRendering
-    } as RenderStrategy
+      offscreenRendering: offscreenRendering,
+    } as RenderStrategy;
   }
 
   /** Returns the best available API type, or `null` if neither is supported. */
@@ -74,7 +76,7 @@ export class GraphicsRuntime {
     } else {
       // Fallback if neither WebGPU nor WebGL is supported
       // return RenderStrategyType.Image;
-      return null; 
+      return null;
     }
   }
 }

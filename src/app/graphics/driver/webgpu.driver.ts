@@ -10,21 +10,23 @@ import { darkModeColor, lightModeColor } from "./constant";
  * Uniforms (`iResolution`, `iTime`, `iDarkMode`) are written to a 16-byte
  * uniform buffer each frame. Returns `null` if the browser lacks WebGPU support.
  */
-export async function webGPUDriver(options: RenderProgramOptions): Promise<RenderProgramHandles | null> {
-  if(!options.navigator?.gpu) {
+export async function webGPUDriver(
+  options: RenderProgramOptions,
+): Promise<RenderProgramHandles | null> {
+  if (!options.navigator?.gpu) {
     return null;
   }
 
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
   if (!device) {
-    console.error('need a browser that supports WebGPU');
+    console.error("need a browser that supports WebGPU");
     return null;
   }
 
   const canvas = options.canvas;
-  const context = options.canvas.getContext('webgpu');
-  if(!context) {
+  const context = options.canvas.getContext("webgpu");
+  if (!context) {
     return null;
   }
 
@@ -38,7 +40,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
   });
 
   const module = device.createShaderModule({
-    label: 'Basic shader',
+    label: "Basic shader",
     code: options.shaderSource,
   });
 
@@ -46,7 +48,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
   const uniforms = {
     iResolution: [canvas.width, canvas.height],
     iTime: 0.0,
-    iDarkMode: clamp(options.settings["dark"] as number, darkModeColor, lightModeColor)
+    iDarkMode: clamp(options.settings["dark"] as number, darkModeColor, lightModeColor),
   };
 
   // Create a uniform buffer
@@ -61,7 +63,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: 'uniform' },
+        buffer: { type: "uniform" },
       },
     ],
   });
@@ -79,29 +81,29 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
   });
 
   const pipeline: GPURenderPipeline = device.createRenderPipeline({
-    label: 'Basic shader',
+    label: "Basic shader",
     layout: device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
     vertex: {
-      entryPoint: 'vs',
+      entryPoint: "vs",
       module,
     },
     fragment: {
-      entryPoint: 'fs',
+      entryPoint: "fs",
       module,
       targets: [{ format: presentationFormat }],
     },
   });
 
   const renderPassDescriptor = {
-    label: 'our basic canvas renderPass',
+    label: "our basic canvas renderPass",
     colorAttachments: [
       {
         // view: <- to be filled out when we render
         clearValue: [0.5, 0.5, 0.5, 1],
-        loadOp: 'clear',
-        storeOp: 'store',
-        view: context.getCurrentTexture().createView()
-      } ,
+        loadOp: "clear",
+        storeOp: "store",
+        view: context.getCurrentTexture().createView(),
+      },
     ] as GPURenderPassColorAttachment[],
   } as const;
 
@@ -116,7 +118,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     ]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer);
   };
-  
+
   // Render loop
   let rafHandle: number | null = null;
 
@@ -142,7 +144,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     }
 
     // Frame rate limiting — skip draw but keep RAF running
-    if (minFrameTime > 0 && (timestamp - lastRenderTime) < minFrameTime) {
+    if (minFrameTime > 0 && timestamp - lastRenderTime < minFrameTime) {
       rafHandle = requestAnimationFrame(render);
       return;
     }
@@ -152,10 +154,8 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     lastRenderTime = timestamp; // Update the last render time
     updateUniforms(accumulatedTime);
 
-    renderPassDescriptor.colorAttachments[0].view = context
-      .getCurrentTexture()
-      .createView();
-    const encoder = device.createCommandEncoder({ label: 'Render encoder' });
+    renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView();
+    const encoder = device.createCommandEncoder({ label: "Render encoder" });
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
@@ -177,8 +177,8 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
 
       // cancel the AnimationFrame
       if (rafHandle) {
-          cancelAnimationFrame(rafHandle);
-          rafHandle = null;
+        cancelAnimationFrame(rafHandle);
+        rafHandle = null;
       }
     },
     resume: () => {
@@ -200,7 +200,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
         cancelAnimationFrame(rafHandle);
         rafHandle = null;
       }
-      
+
       device.destroy();
       uniformBuffer.destroy();
     },
@@ -209,6 +209,6 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     },
     setFpsLimit: (fps) => {
       minFrameTime = fps > 0 ? 1000 / fps : 0;
-    }
+    },
   } satisfies RenderProgramHandles;
 }

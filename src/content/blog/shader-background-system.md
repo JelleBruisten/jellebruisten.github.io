@@ -16,9 +16,7 @@ There are six active backgrounds: aurora, particles, perlin noise, snow, shapes,
 ```typescript
 function pickDailyBackground(): BackgroundName {
   const d = new Date();
-  const day = Math.floor(
-    (d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000
-  );
+  const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000);
   return availableBackgrounds[day % availableBackgrounds.length];
 }
 ```
@@ -136,9 +134,9 @@ It also means the transition is smooth. When you toggle the theme, the `darkmode
 Where the browser supports `OffscreenCanvas`, the rendering runs in a Web Worker. The main thread transfers canvas ownership and communicates via `postMessage`:
 
 ```typescript
-worker.postMessage({ type: 'init', shaderName: 'aurora' });
-worker.postMessage({ type: 'resize', width: 1280, height: 720 });
-worker.postMessage({ type: 'darkmode', value: 0.2 });
+worker.postMessage({ type: "init", shaderName: "aurora" });
+worker.postMessage({ type: "resize", width: 1280, height: 720 });
+worker.postMessage({ type: "darkmode", value: 0.2 });
 ```
 
 Inside the worker, the driver runs its own `requestAnimationFrame` loop (via the offscreen canvas's equivalent). The GPU work, shader compilation, and buffer updates never block the UI thread. Scrolling, animations, and interactions on the page are unaffected.
@@ -148,7 +146,7 @@ The worker uses a serialised initialisation chain to prevent race conditions if 
 ```typescript
 initChain = initChain.then(async () => {
   programHandles?.stop();
-  programHandles = await init(shaderName) ?? null;
+  programHandles = (await init(shaderName)) ?? null;
 });
 ```
 

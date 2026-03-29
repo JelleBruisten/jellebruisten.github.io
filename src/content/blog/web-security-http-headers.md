@@ -105,15 +105,15 @@ This header replaces the older `Feature-Policy` header, which had a different sy
 
 ## Quick Reference
 
-| Header | Protects against | Recommended value |
-|---|---|---|
-| `Strict-Transport-Security` | SSL stripping, HTTP interception | `max-age=31536000; includeSubDomains` |
-| `Content-Security-Policy: frame-ancestors` | Clickjacking | `'none'` or `'self'` |
-| `X-Frame-Options` | Clickjacking (legacy) | `DENY` |
-| `Cross-Origin-Opener-Policy` | Cross-window Spectre attacks | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | Cross-origin data leaks | `require-corp` or `credentialless` |
-| `Referrer-Policy` | URL leakage via Referer | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | Feature abuse by embedded content | restrict to what you need |
+| Header                                     | Protects against                  | Recommended value                     |
+| ------------------------------------------ | --------------------------------- | ------------------------------------- |
+| `Strict-Transport-Security`                | SSL stripping, HTTP interception  | `max-age=31536000; includeSubDomains` |
+| `Content-Security-Policy: frame-ancestors` | Clickjacking                      | `'none'` or `'self'`                  |
+| `X-Frame-Options`                          | Clickjacking (legacy)             | `DENY`                                |
+| `Cross-Origin-Opener-Policy`               | Cross-window Spectre attacks      | `same-origin`                         |
+| `Cross-Origin-Embedder-Policy`             | Cross-origin data leaks           | `require-corp` or `credentialless`    |
+| `Referrer-Policy`                          | URL leakage via Referer           | `strict-origin-when-cross-origin`     |
+| `Permissions-Policy`                       | Feature abuse by embedded content | restrict to what you need             |
 
 ## Series Navigation
 

