@@ -34,9 +34,9 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let opacity   = mix(0.7, 1.0, dark);
     let sizeScale = 2.0;
 
-    // Scale count by aspect ratio so density stays constant across screen sizes.
-    // 100 is the base density for a 1:1 square; wider screens get more flakes.
-    let count = i32(100.0 * max(aspect, 1.0));
+    // Scale count by viewport area so small screens get fewer flakes.
+    // ~100 on a 1920×1080 desktop, ~40 on a 375×667 phone.
+    let count = clamp(i32(sqrt(u.iResolution.x * u.iResolution.y) * 0.08), 15, 200);
     let t = u.iTime;
 
     for (var i = 0; i < 300; i++) {
@@ -50,9 +50,12 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
         let speed = 0.04 + h2 * 0.08;
         let size  = (0.003 + h3 * 0.007) * sizeScale;
 
-        // Position: drift horizontally with sin, fall downward and wrap
+        // Position: drift horizontally with sin, fall downward and wrap.
+        // Extend range beyond [0,1] so flakes spawn above and fall past the bottom.
+        let pad   = 0.03;
+        let range = 1.0 + 2.0 * pad;
         let x = h1 + 0.05 * sin(t * 0.5 + fi * 1.7);
-        let y = fract(h2 + t * speed);
+        let y = -pad + fract(h2 + t * speed) * range;
 
         let center = vec2f(x, y);
         let diff = abs(uv - center);
