@@ -201,6 +201,7 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
           <p id="debug-label" class="section-label">Debug</p>
           <div class="btn-group">
             <button class="opt-btn" [class.active]="settings.showFps()" (click)="settings.showFps.set(!settings.showFps())">FPS Counter</button>
+            <button class="opt-btn" [class.active]="settings.debugLogs()" (click)="settings.debugLogs.set(!settings.debugLogs())">Debug Logs</button>
           </div>
         </section>
 

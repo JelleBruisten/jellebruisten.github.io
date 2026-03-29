@@ -36,7 +36,7 @@ import { ChevronDownIconComponent } from '../../shared/icons/chevron-down-icon.c
         <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-300
                    max-w-2xl mx-auto mb-10 leading-relaxed">
           Frontend Architect. Angular enthusiast, web platform tinkerer,
-          and open source contributor.
+          and occasional open-source contributor.
         </p>
 
         <!-- CTAs -->
@@ -132,7 +132,7 @@ export class HomeComponent {
   constructor() {
     if (isPlatformServer(inject(PLATFORM_ID))) {
       inject(Title).setTitle('Jelle Bruisten — Frontend Architect');
-      inject(Meta).updateTag({ name: 'description', content: 'Frontend Architect based in the Netherlands. Angular enthusiast, open source contributor, and maker of things on the web.' });
+      inject(Meta).updateTag({ name: 'description', content: 'Frontend Architect based in the Netherlands. Angular enthusiast, occasional open-source contributor, and maker of things on the web.' });
     }
   }
 }

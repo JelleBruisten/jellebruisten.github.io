@@ -1,8 +1,9 @@
-import { inject, Injectable, isDevMode, signal } from "@angular/core";
+import { inject, Injectable, signal } from "@angular/core";
 import { GraphicsRuntime } from "./runtime";
 import { RenderProgramHandles, RenderStrategy, RenderStrategyType } from "./types";
 import { DOCUMENT } from "@angular/common";
 import { printRenderInfo } from "./driver/debug";
+import { SettingsService } from "../settings/setting.service";
 
 /** Handle to a running shader program, its canvas, and a teardown callback. */
 export interface ProgramRef {
@@ -31,6 +32,7 @@ export class BackgroundProgramManager {
 
   private readonly document = inject(DOCUMENT);
   private readonly runtime = inject(GraphicsRuntime);
+  private readonly settings = inject(SettingsService);
 
   // lazy properties
   private shaderCache: Map<string, string> | undefined;
@@ -93,6 +95,7 @@ export class BackgroundProgramManager {
     }
 
     this.currentProgram?.destroy();
+    this.stopDrawFpsMeasurement();
 
     // on small screens render at half resolution — the GPU is shared with the
     // compositor, so saturating it with a full-res shader causes scroll jank
@@ -133,8 +136,7 @@ export class BackgroundProgramManager {
       }
     };
 
-    // in dev mode print render info
-    if (isDevMode()) {
+    if (this.settings.debugLogs()) {
       printRenderInfo(program);
     }
 

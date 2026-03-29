@@ -1,5 +1,5 @@
 import { DOCUMENT } from "@angular/common";
-import { computed, effect, inject, Injectable, linkedSignal, signal } from "@angular/core";
+import { computed, effect, inject, Injectable, isDevMode, linkedSignal, signal } from "@angular/core";
 import { darkModeColor, lightModeColor } from "../graphics/driver/constant";
 
 const enum DarkPreference {
@@ -46,7 +46,11 @@ export class SettingsService {
     return isDark(darkPreference) ? darkModeColor : lightModeColor;
   });
 
+  /** Enabled showing fps counter */
   readonly showFps = signal(false);
+
+  /** Enables verbose console logging for the graphics pipeline. On by default in dev mode. */
+  readonly debugLogs = signal(isDevMode());
 
   // 0 = unlimited, 60/120/180 = capped
   readonly fpsLimit = signal(60);

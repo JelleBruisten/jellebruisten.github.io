@@ -50,7 +50,7 @@ export class BackgroundComponent {
         const strategyMatch = ref?.strategy?.type === strategy?.type &&
                               ref?.strategy?.offscreenRendering === strategy?.offscreenRendering;
         const refMismatch = ref?.name !== name || !strategyMatch;
-        console.debug('[bg effect] name=%s strategy=%o refMismatch=%o', name, strategy, refMismatch);
+        if (this.settings.debugLogs()) console.debug('[bg effect] name=%s strategy=%o refMismatch=%o', name, strategy, refMismatch);
         if(refMismatch) {
           untracked(() => this.start(name, strategy));
         }
@@ -82,12 +82,12 @@ export class BackgroundComponent {
    * circular effect dependencies.
    */
   async start(name: string, renderStrategy?: RenderStrategy | null) {
-    console.debug('[bg start] called name=%s renderStrategy=%o', name, renderStrategy);
+    if (this.settings.debugLogs()) console.debug('[bg start] called name=%s renderStrategy=%o', name, renderStrategy);
     const settings = untracked(() => this.settings.effectiveSettings());
     const program = await this.programManager.startProgram(name, renderStrategy, settings);
     if(program) {
       const isNew = program !== this.programRef;
-      console.debug('[bg start] resolved program isNew=%o sameCanvas=%o', isNew, program.canvas === this.programRef?.canvas);
+      if (this.settings.debugLogs()) console.debug('[bg start] resolved program isNew=%o sameCanvas=%o', isNew, program.canvas === this.programRef?.canvas);
       const canvas = program.canvas;
       (this.host.nativeElement as HTMLElement).replaceChildren(canvas);
       // programRef must be updated before strategy.set() so the reactive effect
