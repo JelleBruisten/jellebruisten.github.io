@@ -21,18 +21,16 @@ interface BackgroundOptions {
 const shaderCache = new Map<string, string>();
 
 const resolveShader = async(shaderName: string) => {
-  let shaderSource: string | null | undefined = null;
-
   // lazy create map
   if(shaderCache && shaderCache.has(shaderName)) {
-    shaderSource = shaderCache.get(shaderName);
+    const cached = shaderCache.get(shaderName);
 
-    if(shaderSource) {
-      return shaderSource
+    if(cached) {
+      return cached;
     }
   }
 
-  shaderSource = await fetch(`./shaders/${shaderName}`).then((x) => x.text());
+  const shaderSource = await fetch(`./shaders/${shaderName}`).then((x) => x.text());
   if(shaderSource) {
     // set the shaderName
     shaderCache.set(shaderName, shaderSource);

@@ -103,7 +103,11 @@ export class BackgroundService {
   }
 
   togglePlayback() {
-    this.paused() ? this.resume() : this.pause();
+    if (this.paused()) {
+      this.resume();
+    } else {
+      this.pause();
+    }
   }
 
   stop() {

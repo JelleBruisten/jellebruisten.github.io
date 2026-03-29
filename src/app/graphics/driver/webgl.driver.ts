@@ -120,8 +120,6 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
   // time
   let accumulatedTime = 0;
   let lastRenderTime = 0; // Last frame's timestamp
-  let frameCount = 0;
-
   // Frame rate limiting: 0 = unlimited
   let minFrameTime = options.settings["fpsLimit"]
     ? 1000 / (options.settings["fpsLimit"] as number)
@@ -160,8 +158,6 @@ export async function webGL2Driver(options: RenderProgramOptions): Promise<Rende
     // stalled frame sends accumulatedTime (and thus particle positions) jumping forward.
     const delta = Math.min(rawDelta, 50);
     accumulatedTime += delta;
-    frameCount++;
-
     // Resize the canvas to fit the window
     gl.viewport(0, 0, canvas.width, canvas.height);
 

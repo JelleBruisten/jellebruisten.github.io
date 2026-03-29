@@ -72,7 +72,7 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
     ],
   });
 
-  let pipeline: GPURenderPipeline = device.createRenderPipeline({
+  const pipeline: GPURenderPipeline = device.createRenderPipeline({
     label: 'Basic shader',
     layout: device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
     vertex: {
@@ -96,8 +96,8 @@ export async function webGPUDriver(options: RenderProgramOptions): Promise<Rende
         storeOp: 'store',
         view: context.getCurrentTexture().createView()
       } ,
-    ] as Array<GPURenderPassColorAttachment>,
-  } as const; 
+    ] as GPURenderPassColorAttachment[],
+  } as const;
 
   // Update uniforms function
   const updateUniforms = (time: number) => {

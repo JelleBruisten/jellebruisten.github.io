@@ -1,6 +1,6 @@
 import { inject, Injectable, isDevMode, signal } from "@angular/core";
 import { GraphicsRuntime } from "./runtime";
-import { RenderProgramHandles, RenderProgramOptions, RenderStrategy, RenderStrategyType } from "./types";
+import { RenderProgramHandles, RenderStrategy, RenderStrategyType } from "./types";
 import { DOCUMENT } from "@angular/common";
 import { printRenderInfo } from "./driver/debug";
 
@@ -112,7 +112,9 @@ export class BackgroundProgramManager {
     };
 
     // in dev mode print render info
-    isDevMode() && printRenderInfo(program);
+    if (isDevMode()) {
+      printRenderInfo(program);
+    }
 
     this.currentProgram = program;
 
@@ -184,23 +186,28 @@ export class BackgroundProgramManager {
       onDraw: () => { this.drawCount++; }
     } as const
 
-    switch(renderStrategy.type) {
-      case RenderStrategyType.WebGL: {
-        const shaderSource = await this.resolveShader(`${shaderName}.glsl`);
-        programHandles = await import('./driver/webgl.driver').then(async (x) => x.webGL2Driver({
-          ...options,
-          shaderSource: shaderSource
-        }));
+    try {
+      switch(renderStrategy.type) {
+        case RenderStrategyType.WebGL: {
+          const shaderSource = await this.resolveShader(`${shaderName}.glsl`);
+          programHandles = await import('./driver/webgl.driver').then(async (x) => x.webGL2Driver({
+            ...options,
+            shaderSource: shaderSource
+          }));
+        }
+        break;
+        case RenderStrategyType.WebGPU: {
+          const shaderSource = await this.resolveShader(`${shaderName}.wgsl`);
+          programHandles = await import('./driver/webgpu.driver').then(async (x) => x.webGPUDriver({
+            ...options,
+            shaderSource: shaderSource
+          }));
+        }
+        break;
       }
-      break;
-      case RenderStrategyType.WebGPU: {
-        const shaderSource = await this.resolveShader(`${shaderName}.wgsl`);
-        programHandles = await import('./driver/webgpu.driver').then(async (x) => x.webGPUDriver({
-          ...options,
-          shaderSource: shaderSource
-        }));
-      }
-      break;
+    } catch (err) {
+      console.error(`[BackgroundProgramManager] Failed to start ${renderStrategy.type === RenderStrategyType.WebGPU ? 'WebGPU' : 'WebGL'} driver for "${shaderName}":`, err);
+      return null;
     }
 
     if (programHandles && scale < 1) {
@@ -236,18 +243,16 @@ export class BackgroundProgramManager {
   }
 
   private async resolveShader(shaderName: string) {
-    let shaderSource: string | null | undefined = null;
-
     // lazy create map
     if(this.shaderCache && this.shaderCache.has(shaderName)) {
-      shaderSource = this.shaderCache.get(shaderName);
+      const cached = this.shaderCache.get(shaderName);
 
-      if(shaderSource) {
-        return shaderSource
+      if(cached) {
+        return cached;
       }
     }
 
-    shaderSource = await fetch(`./shaders/${shaderName}`).then((x) => x.text());
+    const shaderSource = await fetch(`./shaders/${shaderName}`).then((x) => x.text());
     if(shaderSource) {
 
       // lazily create the cache if it does not exist

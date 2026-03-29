@@ -28,10 +28,11 @@ export class SettingsService {
           return false;
 
         case DarkPreference.Auto:
-        default:
+        default: {
           const window = this.document.defaultView;
           const prefersDarkMode = window?.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
           return prefersDarkMode;
+        }
       }
     }
     return isDark(darkPreference) ? darkModeColor : lightModeColor;
