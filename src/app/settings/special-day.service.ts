@@ -6,12 +6,15 @@ import { map } from "rxjs";
 
 export type SpecialDayName =
   | 'new-year'
+  | 'lunar-new-year'
   | 'birthday'
+  | 'carnival'
   | 'valentines'
   | 'st-patricks'
   | 'april-fools'
   | 'earth-day'
   | 'kingsday'
+  | 'liberation-day'
   | 'easter'
   | 'halloween'
   | 'day-of-dead'
@@ -31,12 +34,15 @@ interface SpecialDayTheme {
 /** Maps short query param aliases to SpecialDayName for ?special=... URLs. */
 const queryAliases: Record<string, SpecialDayName> = {
   'newyear': 'new-year', 'nye': 'new-year', 'new-year': 'new-year',
+  'lunar': 'lunar-new-year', 'lunar-new-year': 'lunar-new-year', 'chinese': 'lunar-new-year', 'cny': 'lunar-new-year',
   'birthday': 'birthday', 'bday': 'birthday',
+  'carnival': 'carnival', 'mardi-gras': 'carnival', 'mardigras': 'carnival',
   'valentine': 'valentines', 'valentines': 'valentines', 'val': 'valentines',
   'patrick': 'st-patricks', 'patricks': 'st-patricks', 'st-patricks': 'st-patricks', 'stpat': 'st-patricks',
   'fools': 'april-fools', 'april-fools': 'april-fools', 'aprilfools': 'april-fools',
   'earth': 'earth-day', 'earth-day': 'earth-day', 'earthday': 'earth-day',
   'king': 'kingsday', 'kings': 'kingsday', 'kingsday': 'kingsday',
+  'liberation': 'liberation-day', 'liberation-day': 'liberation-day', 'bevrijding': 'liberation-day',
   'easter': 'easter',
   'halloween': 'halloween', 'hween': 'halloween',
   'dotd': 'day-of-dead', 'day-of-dead': 'day-of-dead', 'dead': 'day-of-dead',
@@ -53,12 +59,28 @@ const themes: Record<SpecialDayName, SpecialDayTheme> = {
     greeting: 'Happy New Year!',
     wikiUrl: 'https://en.wikipedia.org/wiki/New_Year%27s_Day',
   },
+  'lunar-new-year': {
+    shader: 'lights',
+    brand: 'oklch(0.65 0.22 30)',
+    brandLight: 'oklch(0.75 0.18 30)',
+    brandDark: 'oklch(0.50 0.25 25)',
+    greeting: 'Happy Lunar New Year!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Lunar_New_Year',
+  },
   'birthday': {
     shader: 'fireworks',
     brand: 'oklch(0.75 0.16 85)',
     brandLight: 'oklch(0.82 0.13 85)',
     brandDark: 'oklch(0.62 0.19 85)',
     greeting: "It's my birthday!",
+  },
+  'carnival': {
+    shader: 'confetti',
+    brand: 'oklch(0.68 0.24 310)',
+    brandLight: 'oklch(0.76 0.20 310)',
+    brandDark: 'oklch(0.52 0.27 320)',
+    greeting: 'Happy Carnival!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Carnival',
   },
   'kingsday': {
     shader: 'fireworks-orange',
@@ -67,6 +89,14 @@ const themes: Record<SpecialDayName, SpecialDayTheme> = {
     brandDark: 'oklch(0.55 0.22 55)',
     greeting: 'Happy King\'s Day!',
     wikiUrl: 'https://en.wikipedia.org/wiki/Koningsdag',
+  },
+  'liberation-day': {
+    shader: 'fireworks',
+    brand: 'oklch(0.60 0.20 250)',
+    brandLight: 'oklch(0.70 0.16 250)',
+    brandDark: 'oklch(0.48 0.22 250)',
+    greeting: 'Happy Liberation Day!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Liberation_Day_(Netherlands)',
   },
   'valentines': {
     shader: 'hearts',
@@ -167,6 +197,23 @@ function getEasterDate(year: number): Date {
   return new Date(year, month - 1, day);
 }
 
+/** Lunar New Year date lookup — accurate for 2024-2035. */
+function getLunarNewYearDate(year: number): Date {
+  const dates: Record<number, [number, number]> = {
+    2024: [1, 10],  2025: [0, 29],  2026: [1, 17],  2027: [1, 6],
+    2028: [0, 26],  2029: [1, 13],  2030: [1, 3],   2031: [0, 23],
+    2032: [1, 11],  2033: [0, 31],  2034: [1, 19],  2035: [1, 8],
+  };
+  const entry = dates[year];
+  return entry ? new Date(year, entry[0], entry[1]) : new Date(year, 0, 29);
+}
+
+/** Carnival (Mardi Gras) = 47 days before Easter Sunday. */
+function getCarnivalDate(year: number): Date {
+  const easter = getEasterDate(year);
+  return new Date(easter.getTime() - 47 * 86_400_000);
+}
+
 /** Approximate Diwali date lookup — accurate for 2024-2035. */
 function getDiwaliDate(year: number): Date {
   const dates: Record<number, [number, number]> = {
@@ -191,15 +238,22 @@ function detectSpecialDay(date: Date): SpecialDayName | null {
   if (month === 3 && day === 1) return 'april-fools';
   if (month === 3 && day === 22) return 'earth-day';
   if (month === 3 && day === 27) return 'kingsday';
+  if (month === 4 && day === 5) return 'liberation-day';
   if (month === 9 && day === 31) return 'halloween';
   if (month === 10 && (day === 1 || day === 2)) return 'day-of-dead';
   if (month === 11 && day >= 24 && day <= 26) return 'christmas';
 
   // Variable dates
-  const easter = getEasterDate(year);
-  const easterTime = easter.getTime();
   const dateTime = new Date(year, month, day).getTime();
-  if (Math.abs(dateTime - easterTime) <= 86_400_000) return 'easter';
+
+  const lunarNY = getLunarNewYearDate(year);
+  if (Math.abs(dateTime - lunarNY.getTime()) <= 86_400_000) return 'lunar-new-year';
+
+  const carnival = getCarnivalDate(year);
+  if (Math.abs(dateTime - carnival.getTime()) <= 86_400_000) return 'carnival';
+
+  const easter = getEasterDate(year);
+  if (Math.abs(dateTime - easter.getTime()) <= 86_400_000) return 'easter';
 
   const diwali = getDiwaliDate(year);
   if (Math.abs(dateTime - diwali.getTime()) <= 86_400_000) return 'diwali';
@@ -256,12 +310,15 @@ export class SpecialDayService {
 
   readonly availableDays: readonly { value: SpecialDayName; label: string }[] = [
     { value: 'new-year', label: 'NYE' },
+    { value: 'lunar-new-year', label: 'Lunar' },
     { value: 'birthday', label: 'B-day' },
+    { value: 'carnival', label: 'Carn.' },
     { value: 'valentines', label: 'Val.' },
     { value: 'st-patricks', label: 'StPat' },
     { value: 'april-fools', label: 'Fools' },
     { value: 'earth-day', label: 'Earth' },
     { value: 'kingsday', label: "King's" },
+    { value: 'liberation-day', label: 'Lib.' },
     { value: 'easter', label: 'Easter' },
     { value: 'halloween', label: 'Hween' },
     { value: 'day-of-dead', label: 'DotD' },

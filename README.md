@@ -36,12 +36,15 @@ The site detects holidays and applies themed shaders + brand color overrides aut
 | Day | Query param | Shader |
 |---|---|---|
 | New Year's (Jan 1) | `?special=nye` | Fireworks |
+| Lunar New Year (variable) | `?special=lunar` | Lights |
 | Birthday (Jan 16) | `?special=birthday` | Fireworks |
+| Carnival (variable) | `?special=carnival` | Confetti |
 | Valentine's (Feb 14) | `?special=valentine` | Hearts |
 | St. Patrick's (Mar 17) | `?special=patrick` | Clovers |
 | April Fools (Apr 1) | `?special=fools` | Confetti |
 | Earth Day (Apr 22) | `?special=earth` | Leaves |
 | King's Day (Apr 27) | `?special=king` | Orange Fireworks |
+| Liberation Day (May 5) | `?special=liberation` | Fireworks |
 | Easter (variable) | `?special=easter` | Easter Eggs |
 | Halloween (Oct 31) | `?special=halloween` | Spooky |
 | Day of the Dead (Nov 1-2) | `?special=dotd` | Spooky |
