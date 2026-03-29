@@ -42,7 +42,7 @@ float layer(vec2 uv, float iTime, int numShapes, float speed, float sizeFactor, 
         float radius    = mix(targetR * 0.15, targetR, morphT);
 
         float d  = roundedBoxSDF(uv - vec2(xPos, yPos), finalSize, radius);
-        float aa = fwidth(d);
+        float aa = fwidth(d) + 0.003;
         m        = max(m, visibility * (1.0 - smoothstep(0.0, aa, d)));
     }
 

@@ -23,11 +23,29 @@ npm test          # Karma + Jasmine
 
 ## Shader system
 
-Each visit shows a deterministic daily background — one of six active shaders (aurora, particles, perlin, snow, shapes, ocean) picked by day of year.
+Each visit shows a deterministic daily background — one of six standard shaders (aurora, particles, perlin, snow, shapes, ocean) picked by day of year.
 
 Every shader ships as both GLSL and WGSL. At runtime the system picks WebGPU if available, otherwise falls back to WebGL 2. Where `OffscreenCanvas` is supported the render loop runs entirely on a Web Worker, keeping the main thread free.
 
-Shaders receive three uniforms: `iResolution`, `iTime`, and `iDarkmode`. Resolution is halved on mobile.
+Shaders receive three uniforms: `iResolution`, `iTime`, and `iDarkmode`.
+
+## Special day themes
+
+The site detects holidays and applies themed shaders + brand color overrides automatically. Force any theme with the `?special=` query parameter:
+
+| Day | Query param | Shader |
+|---|---|---|
+| New Year's (Jan 1) | `?special=nye` | Fireworks |
+| Birthday (Jan 16) | `?special=birthday` | Fireworks |
+| Valentine's (Feb 14) | `?special=valentine` | Hearts |
+| St. Patrick's (Mar 17) | `?special=patrick` | Clovers |
+| April Fools (Apr 1) | `?special=fools` | Confetti |
+| Earth Day (Apr 22) | `?special=earth` | Leaves |
+| King's Day (Apr 27) | `?special=king` | Orange Fireworks |
+| Easter (variable) | `?special=easter` | Easter Eggs |
+| Halloween (Oct 31) | `?special=halloween` | Spooky |
+| Day of the Dead (Nov 1-2) | `?special=dotd` | Spooky |
+| Christmas (Dec 24-26) | `?special=xmas` | Snow |
 
 ## Blog
 

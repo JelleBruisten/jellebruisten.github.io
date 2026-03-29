@@ -50,11 +50,10 @@ void main() {
         float y = (1.0 + pad) - fract(h2 + t * speed) * range;
 
         vec2 center = vec2(x, y);
-        vec2 diff = abs(uv - center);
+        vec2 diff = uv - center;
+        float d = length(vec2(diff.x * aspect, diff.y));
 
-        // Bounding box early exit
-        if (diff.x < size && diff.y < size) {
-            float d = length(vec2(diff.x * aspect, diff.y));
+        if (d < size) {
             float circle = smoothstep(size, size * 0.2, d);
             col = mix(col, snowColor, circle * opacity);
         }

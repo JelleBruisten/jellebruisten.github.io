@@ -58,11 +58,10 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
         let y = -pad + fract(h2 + t * speed) * range;
 
         let center = vec2f(x, y);
-        let diff = abs(uv - center);
+        let diff = uv - center;
+        let d = length(vec2f(diff.x * aspect, diff.y));
 
-        // Bounding box early exit
-        if (diff.x < size && diff.y < size) {
-            let d = length(vec2f(diff.x * aspect, diff.y));
+        if (d < size) {
             let circle = smoothstep(size, size * 0.2, d);
             col = mix(col, snowColor, circle * opacity);
         }

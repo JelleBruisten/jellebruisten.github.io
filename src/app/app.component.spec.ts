@@ -6,12 +6,13 @@ import { PLATFORM_ID, Component } from '@angular/core';
 import { BackgroundComponent } from './graphics/background.component';
 import { FpsCounterComponent } from './graphics/fps-counter.component';
 import { SettingsDrawerComponent } from './layout/settings-drawer/settings-drawer.component';
+import { SettingsService } from './settings/setting.service';
 
 // Stubs for components that depend on browser-only APIs (WebGL/WebGPU)
 @Component({ selector: 'app-background', template: '' })
 class BackgroundStubComponent {}
 
-@Component({ selector: 'app-fps-counter', template: '' })
+@Component({ selector: 'app-fps-counter', template: 'FPS' })
 class FpsCounterStubComponent {}
 
 @Component({ selector: 'app-settings-drawer', template: '' })
@@ -50,5 +51,33 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should not show fps counter by default', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-fps-counter')).toBeNull();
+  });
+
+  it('should show fps counter when showFps is enabled', () => {
+    const settings = TestBed.inject(SettingsService);
+    settings.showFps.set(true);
+
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-fps-counter')).toBeTruthy();
+  });
+
+  it('should hide fps counter when showFps is toggled off', () => {
+    const settings = TestBed.inject(SettingsService);
+    settings.showFps.set(true);
+
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-fps-counter')).toBeTruthy();
+
+    settings.showFps.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-fps-counter')).toBeNull();
   });
 });

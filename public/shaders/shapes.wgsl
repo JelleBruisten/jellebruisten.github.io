@@ -57,7 +57,7 @@ fn layer(uv: vec2f, iTime: f32, numShapes: i32, speed: f32, sizeFactor: f32, ver
         // WGSL: y axis is flipped vs GLSL — negate yPos for the SDF center
         let p = uv + vec2f(-xPos, yPos);
         let d = roundedBoxSDF(p, finalSize, radius);
-        let aa = fwidth(d);
+        let aa = fwidth(d) + 0.003;
         m = max(m, visibility * (1.0 - smoothstep(0.0, aa, d)));
     }
 

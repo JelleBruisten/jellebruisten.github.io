@@ -28,6 +28,7 @@ app-root {
 }
 
 html {
+  overflow-x: hidden;
   overflow-y: scroll;
   scrollbar-width: thin;
 }
@@ -113,3 +114,17 @@ html {
 .prose strong { font-weight: 600; }
 .prose hr { border: none; border-top: 1px solid oklch(0.9 0 0); margin: 2rem 0; }
 .dark .prose hr { border-top-color: oklch(0.3 0 0); }
+
+/* ── April Fools ── */
+.special-april-fools main { animation: fools-tilt 8s ease-in-out infinite; }
+@keyframes fools-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(0.4deg); }
+  75% { transform: rotate(-0.4deg); }
+}
+.special-april-fools *:hover > .opt-btn,
+.special-april-fools a:hover { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>🤡</text></svg>") 16 16, pointer; }
+
+/* ── Halloween ── */
+.special-halloween.dark,
+.special-halloween.dark body { background-color: rgb(5 2 10); }

@@ -1,24 +1,33 @@
-import { Injectable, signal } from "@angular/core";
+import { inject, Injectable, linkedSignal, signal } from "@angular/core";
 import { RenderStrategy, RenderStrategyType } from "./types";
 import { Subject } from "rxjs";
+import { SpecialDayService } from "../settings/special-day.service";
 
-const availableBackgrounds = [
+/** Standard backgrounds shown in the settings drawer and used for daily rotation. */
+const standardBackgrounds = [
   'aurora',
   'particles',
-  // 'dots',
   'perlin',
   'snow',
   'shapes',
   'ocean',
-  // 'waves',
-  // 'voronoi',
-  // 'hex',
-  // 'bokeh',
-  // 'caustics',
-  // 'example'
 ] as const;
 
-type BackgroundName = typeof availableBackgrounds[number];
+/** Seasonal shaders only activated by SpecialDayService — not in daily rotation. */
+const specialBackgrounds = [
+  'fireworks',
+  'fireworks-orange',
+  'hearts',
+  'clovers',
+  'confetti',
+  'spooky',
+  'eggs',
+  'leaves',
+] as const;
+
+const allBackgrounds = [... standardBackgrounds, ... specialBackgrounds] as const;
+
+type BackgroundName = typeof allBackgrounds[number];
 
 interface BackgroundEvent {
   type: 'pause' | 'resume' | 'stop',
@@ -28,7 +37,7 @@ interface BackgroundEvent {
 function pickDailyBackground(): BackgroundName {
   const d = new Date();
   const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000);
-  return availableBackgrounds[day % availableBackgrounds.length];
+  return standardBackgrounds[day % standardBackgrounds.length];
 }
 
 /**
@@ -41,9 +50,14 @@ function pickDailyBackground(): BackgroundName {
  */
 @Injectable({ providedIn: 'root'})
 export class BackgroundService {
+  private readonly specialDay = inject(SpecialDayService);
+
   readonly strategy = signal<RenderStrategy | null>(null);
-  readonly name = signal<BackgroundName>(pickDailyBackground());
-  readonly availableBackgrounds = [... availableBackgrounds];
+  readonly name = linkedSignal<BackgroundName>(() => {
+    const theme = this.specialDay.theme();
+    return (theme?.shader ?? pickDailyBackground()) as BackgroundName;
+  });
+  readonly availableBackgrounds = [... standardBackgrounds];
 
   setBackground(name: BackgroundName): void {
     this.name.set(name);

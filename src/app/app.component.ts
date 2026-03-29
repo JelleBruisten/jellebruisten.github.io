@@ -6,6 +6,7 @@ import { FpsCounterComponent } from './graphics/fps-counter.component';
 import { NavbarComponent } from './layout/navbar/navbar.component';
 import { SettingsDrawerComponent } from './layout/settings-drawer/settings-drawer.component';
 import { SettingsService } from './settings/setting.service';
+import { SpecialDayService } from './settings/special-day.service';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +33,7 @@ import { SettingsService } from './settings/setting.service';
       <app-navbar></app-navbar>
       <main class="flex-1" id="main-content" tabindex="-1"
             [style.background]="settings.effectiveDark() ? 'rgba(2,6,23,0.55)' : 'rgba(240,245,255,0.38)'"
-            style="backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)">
+      >
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -49,4 +50,5 @@ import { SettingsService } from './settings/setting.service';
 export class AppComponent {
   protected isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected settings = inject(SettingsService);
+  private specialDay = inject(SpecialDayService);
 }

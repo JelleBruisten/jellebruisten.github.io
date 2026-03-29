@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, isDevMode, signal } from '@angular/core';
 import { BackgroundService } from '../../graphics/background.service';
 import { BackgroundProgramManager } from '../../graphics/manager';
 import { GraphicsRuntime } from '../../graphics/runtime';
 import { SettingsService } from '../../settings/setting.service';
+import { SpecialDayService } from '../../settings/special-day.service';
 import { CloseIconComponent } from '../../shared/icons/close-icon.component';
 import { GearIconComponent } from '../../shared/icons/gear-icon.component';
 
@@ -79,6 +80,8 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
     }
     .btn-group { display: flex; gap: 0.5rem; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.375rem; }
+    .grid-5 .opt-btn { font-size: 0.6875rem; padding: 0.375rem 0; }
     .opt-btn {
       flex: 1;
       padding: 0.5rem 0;
@@ -205,6 +208,30 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
           </div>
         </section>
 
+        <!-- Special Day (dev only) -->
+        @if (isDevMode) {
+          <section class="section" aria-labelledby="special-day-label">
+            <p id="special-day-label" class="section-label">Special Day (Dev)</p>
+            <div class="grid-5" role="group" aria-label="Special day override">
+              <button [class.active]="specialDay.devOverride() === null" class="opt-btn"
+                      (click)="specialDay.devOverride.set(null)">Auto</button>
+              <button [class.active]="specialDay.devOverride() === 'none'" class="opt-btn"
+                      (click)="specialDay.devOverride.set('none')">None</button>
+              @for (day of specialDay.availableDays; track day.value) {
+                <button [class.active]="specialDay.devOverride() === day.value" class="opt-btn"
+                        (click)="specialDay.devOverride.set(day.value)">
+                  {{ day.label }}
+                </button>
+              }
+            </div>
+            @if (specialDay.effectiveDay(); as day) {
+              <p style="margin-top:0.5rem;font-size:0.6875rem;color:rgba(148,163,184,0.7)">
+                Active: {{ day }}
+              </p>
+            }
+          </section>
+        }
+
         <!-- Playback -->
         <section class="section" aria-labelledby="playback-label">
           <p id="playback-label" class="section-label">Playback</p>
@@ -232,6 +259,8 @@ export class SettingsDrawerComponent {
   protected bgService = inject(BackgroundService);
   protected programManager = inject(BackgroundProgramManager);
   protected runtime = inject(GraphicsRuntime);
+  protected specialDay = inject(SpecialDayService);
+  protected isDevMode = isDevMode();
 
   protected darkOpts = [
     { value: 0, label: 'Auto' },

@@ -97,9 +97,7 @@ export class BackgroundProgramManager {
     this.currentProgram?.destroy();
     this.stopDrawFpsMeasurement();
 
-    // on small screens render at half resolution — the GPU is shared with the
-    // compositor, so saturating it with a full-res shader causes scroll jank
-    const scale = window.innerWidth < 768 ? 0.5 : 1.0;
+    const scale = 1.0;
 
     // create a new canvas and apply current window size
     const canvas = this.document.createElement('canvas');
