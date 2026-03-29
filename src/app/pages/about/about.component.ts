@@ -193,6 +193,7 @@ const contributions = [
     </div>
   `,
 })
+/** About page featuring bio, skills grid, and open-source contributions. */
 export class AboutComponent {
   protected skills = skills;
   protected contributions = contributions;

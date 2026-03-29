@@ -7,6 +7,14 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BackgroundService } from "./background.service";
 import { SettingsService } from "../settings/setting.service";
 
+/**
+ * Full-screen animated background rendered via WebGL or WebGPU.
+ *
+ * Reacts to changes in shader name, render strategy, and dark mode via effects.
+ * Uses `untracked()` to prevent signal reads inside `start()` from becoming
+ * effect dependencies. Listens for window resize and playback events
+ * (pause / resume) from {@link BackgroundService}.
+ */
 @Component({
   selector: 'app-background',
   template: ``,
@@ -68,6 +76,11 @@ export class BackgroundComponent {
     })
   }
 
+  /**
+   * Starts a new shader program, replaces the canvas in the DOM, and updates
+   * the strategy signal. Called from within `untracked()` to avoid creating
+   * circular effect dependencies.
+   */
   async start(name: string, renderStrategy?: RenderStrategy | null) {
     console.debug('[bg start] called name=%s renderStrategy=%o', name, renderStrategy);
     const settings = untracked(() => this.settings.effectiveSettings());

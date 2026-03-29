@@ -4,6 +4,7 @@ import { RenderProgramHandles, RenderStrategy, RenderStrategyType } from "./type
 import { DOCUMENT } from "@angular/common";
 import { printRenderInfo } from "./driver/debug";
 
+/** Handle to a running shader program, its canvas, and a teardown callback. */
 export interface ProgramRef {
   readonly name: string;
   readonly strategy: RenderStrategy;
@@ -14,6 +15,15 @@ export interface ProgramRef {
 
 type Settings = Record<string, boolean | number>;
 
+/**
+ * Orchestrates the lifecycle of background shader programs.
+ *
+ * Responsible for creating canvases, loading and caching shader source files,
+ * selecting the correct driver (WebGL / WebGPU) and execution context
+ * (main thread / OffscreenCanvas worker), and measuring draw FPS.
+ * Only one program runs at a time — switching names or strategies tears down
+ * the previous program before starting a new one.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -34,6 +44,7 @@ export class BackgroundProgramManager {
   private lastDrawTime = performance.now();
   private drawFpsInterval: ReturnType<typeof setInterval> | null = null;
 
+  /** Starts a 500 ms interval that samples draw count deltas and updates the `drawFps` signal. */
   private startDrawFpsMeasurement() {
     this.stopDrawFpsMeasurement();
     this.drawCount = 0;
@@ -49,6 +60,7 @@ export class BackgroundProgramManager {
     }, 500);
   }
 
+  /** Clears the FPS sampling interval. */
   private stopDrawFpsMeasurement() {
     if (this.drawFpsInterval) {
       clearInterval(this.drawFpsInterval);
@@ -56,6 +68,11 @@ export class BackgroundProgramManager {
     }
   }
 
+  /**
+   * Starts (or reuses) a shader program by name.
+   * Falls back to the recommended render strategy if none is provided.
+   * Returns the active {@link ProgramRef}, or the existing one if name and strategy are unchanged.
+   */
   async startProgram(name: string, renderStrategy?: RenderStrategy | null, settings?: Settings) {
     if(!renderStrategy) {
       renderStrategy = this.runtime.getRecommendedRenderStrategy();
@@ -65,6 +82,11 @@ export class BackgroundProgramManager {
     return program;
   }
 
+  /**
+   * Core program setup: tears down the previous program if the name or strategy
+   * changed, creates a new canvas (half-res on mobile), and delegates to
+   * offscreen or main-thread initialization.
+   */
   private async startProgramHelper(name: string, renderStrategy: RenderStrategy, settings?: Settings) {
     if(this.currentProgram && this.currentProgram.name === name && this.currentProgram.strategy.offscreenRendering === renderStrategy.offscreenRendering && this.currentProgram.strategy.type == renderStrategy.type) {
       return this.currentProgram;
@@ -122,6 +144,11 @@ export class BackgroundProgramManager {
     return program;
   }
 
+  /**
+   * Transfers the canvas to an OffscreenCanvas and sends an `init` message
+   * to the shared Web Worker. Returns a {@link RenderProgramHandles} proxy
+   * that forwards all control messages via `postMessage`.
+   */
   private async startProgramOffscreen(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
     // worker
     const worker = this.getWorker();
@@ -163,6 +190,7 @@ export class BackgroundProgramManager {
     return programHandles;
   }
 
+  /** Lazily creates and returns the shared Web Worker, listening for FPS reports. */
   private getWorker() {
     if (!this.worker) {
       this.worker = new Worker(new URL('./driver/driver.worker', import.meta.url));
@@ -175,6 +203,11 @@ export class BackgroundProgramManager {
     return this.worker;
   }
 
+  /**
+   * Initializes the shader on the main thread by lazy-importing the correct
+   * driver (WebGL or WebGPU). Wraps resize calls to apply the resolution scale
+   * factor when rendering at half resolution on mobile.
+   */
   private async startProgramNormally(shaderName: string, canvas: HTMLCanvasElement, renderStrategy: RenderStrategy, settings: Settings = {}, scale = 1.0) {
     let programHandles: RenderProgramHandles | null = null;
     const options = {
@@ -242,6 +275,7 @@ export class BackgroundProgramManager {
     this.resolveShader(`${name}${ext}`);
   }
 
+  /** Fetches a shader file by name, returning a cached copy if available. */
   private async resolveShader(shaderName: string) {
     // lazy create map
     if(this.shaderCache && this.shaderCache.has(shaderName)) {

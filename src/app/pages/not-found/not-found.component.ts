@@ -27,4 +27,5 @@ import { ArrowLeftIconComponent } from '../../shared/icons/arrow-left-icon.compo
     </div>
   `,
 })
+/** 404 page shown for unmatched routes. */
 export class NotFoundComponent {}

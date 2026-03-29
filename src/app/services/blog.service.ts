@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, map, Observable, of } from 'rxjs';
 import { BLOG_POSTS, BlogPost } from '../../generated/blog-data';
 
+/**
+ * Provides access to blog post metadata and content.
+ *
+ * Metadata is imported statically from the build-time generated `blog-data.ts`,
+ * while post HTML content is fetched lazily via HTTP to keep the initial bundle small.
+ */
 @Injectable({ providedIn: 'root' })
 export class BlogService {
   private readonly http = inject(HttpClient);

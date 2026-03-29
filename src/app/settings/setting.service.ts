@@ -8,6 +8,14 @@ const enum DarkPreference {
   Dark
 }
 
+/**
+ * Reactive application settings backed by Angular signals.
+ *
+ * Manages dark mode preference (auto / light / dark), FPS limiter, and debug
+ * toggles. The `darkLevel` signal produces a numeric value (0.2 = dark, 1 = light)
+ * consumed by the shader uniform, while `effectiveDark` drives the CSS `.dark` class
+ * on the document element via an effect.
+ */
 @Injectable({providedIn: 'root'})
 export class SettingsService {
   private readonly document = inject(DOCUMENT);

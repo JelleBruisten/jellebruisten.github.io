@@ -107,6 +107,7 @@ import { MoonIconComponent } from '../../shared/icons/moon-icon.component';
     </nav>
   `,
 })
+/** Sticky top navigation with page links, dark / light mode toggle, and social links. */
 export class NavbarComponent {
   protected readonly settings = inject(SettingsService);
 

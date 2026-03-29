@@ -218,6 +218,13 @@ import { GearIconComponent } from '../../shared/icons/gear-icon.component';
     </aside>
   `,
 })
+/**
+ * Slide-out settings panel anchored to the bottom-right corner.
+ *
+ * Controls appearance (dark mode), background shader selection, graphics API
+ * (WebGL / WebGPU), thread mode (main / worker), FPS limiter, and debug
+ * overlays. The toggle button doubles as a background name pill when closed.
+ */
 export class SettingsDrawerComponent {
   protected open = signal(false);
   protected settings = inject(SettingsService);

@@ -8,6 +8,7 @@ export interface RenderStrategy {
   readonly offscreenRendering: boolean;
 }
 
+/** Control surface returned by a graphics driver to manage a running shader. */
 export interface RenderProgramHandles {
   stop(): void;
   pause(): void;
@@ -17,6 +18,7 @@ export interface RenderProgramHandles {
   setFpsLimit(fps: number): void;
 }
 
+/** Options passed to a graphics driver to initialize a shader program. */
 export interface RenderProgramOptions {
   canvas: HTMLCanvasElement | OffscreenCanvas,
   navigator: Navigator,

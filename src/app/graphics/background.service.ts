@@ -31,6 +31,14 @@ function pickDailyBackground(): BackgroundName {
   return availableBackgrounds[day % availableBackgrounds.length];
 }
 
+/**
+ * Manages the active background shader and its render strategy.
+ *
+ * Selects a daily background deterministically from the day-of-year, exposes
+ * signals for the current shader name and render strategy (WebGL / WebGPU,
+ * main thread / worker), and emits playback events (pause, resume, stop)
+ * consumed by {@link BackgroundComponent}.
+ */
 @Injectable({ providedIn: 'root'})
 export class BackgroundService {
   readonly strategy = signal<RenderStrategy | null>(null);
@@ -42,6 +50,7 @@ export class BackgroundService {
   }
   readonly events$ = new Subject<BackgroundEvent>();
 
+  /** Switches the graphics API. If a specific type is given, sets it directly; otherwise toggles between WebGL and WebGPU. */
   toggleRendering(type?: RenderStrategyType) {
     const strategy = this.strategy();
     if(!strategy ) {
@@ -69,6 +78,7 @@ export class BackgroundService {
     }
   }
 
+  /** Switches between main-thread and OffscreenCanvas worker rendering. Accepts an explicit value or toggles. */
   toggleWebworker(offscreenRendering?: boolean) {
     const strategy = this.strategy();
     if(!strategy) {

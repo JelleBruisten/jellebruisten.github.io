@@ -4,6 +4,12 @@ import { RenderProgramHandles, RenderProgramOptions } from "../types";
 import { clamp } from "./clamp";
 import { darkModeColor, lightModeColor } from "./constant";
 
+/**
+ * WebGPU driver — requests an adapter and device, creates a render pipeline
+ * from the provided WGSL shader, and runs a `requestAnimationFrame` loop.
+ * Uniforms (`iResolution`, `iTime`, `iDarkMode`) are written to a 16-byte
+ * uniform buffer each frame. Returns `null` if the browser lacks WebGPU support.
+ */
 export async function webGPUDriver(options: RenderProgramOptions): Promise<RenderProgramHandles | null> {
   if(!options.navigator?.gpu) {
     return null;

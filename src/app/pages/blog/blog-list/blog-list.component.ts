@@ -105,6 +105,7 @@ import { ArrowRightIconComponent } from '../../../shared/icons/arrow-right-icon.
     </div>
   `,
 })
+/** Filterable blog post listing with tag-based query param navigation. */
 export class BlogListComponent {
   private blog   = inject(BlogService);
   private router = inject(Router);

@@ -2,7 +2,7 @@ import { RenderProgramHandles, RenderProgramOptions } from "../types";
 import { clamp } from "./clamp";
 import { darkModeColor, lightModeColor } from "./constant";
 
-// Compile a shader
+/** Compiles a GLSL shader, returning the shader object or `null` on failure. */
 function compileShader(gl: WebGL2RenderingContext , source: string, type: GLenum) {
   const shader = gl.createShader(type);
   if(!shader) {
@@ -19,7 +19,7 @@ function compileShader(gl: WebGL2RenderingContext , source: string, type: GLenum
   return shader;
 }
 
-// Create a program
+/** Links a vertex + fragment shader into a program. Returns the program and a cleanup callback. */
 function createProgram(gl: WebGL2RenderingContext , vertexSource: string, fragmentSource: string) {
   const program = gl.createProgram();
   if(!program) {
@@ -51,6 +51,15 @@ function createProgram(gl: WebGL2RenderingContext , vertexSource: string, fragme
   ] as const;
 }
 
+/**
+ * WebGL 2 driver — sets up a full-screen quad, compiles the fragment shader,
+ * and runs a `requestAnimationFrame` loop that feeds `u_time`, `u_resolution`,
+ * and `u_darkmode` uniforms each frame. Returns handles for pause, resume,
+ * resize, stop, dark mode, and FPS limiting.
+ *
+ * Resize is deferred to the next frame via pending dimensions to avoid clearing
+ * the drawing buffer mid-frame (which would flash a blank frame).
+ */
 export async function webGL2Driver(options: RenderProgramOptions): Promise<RenderProgramHandles | null> {
   const canvas = options.canvas;
   // Create a WebGL context

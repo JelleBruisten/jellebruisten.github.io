@@ -3,7 +3,11 @@ import { inject, Injectable } from "@angular/core";
 import { RenderStrategy, RenderStrategyType } from "./types";
 
 /**
- * 
+ * Detects browser graphics capabilities and recommends a render strategy.
+ *
+ * Probes for WebGPU, WebGL 2, and OffscreenCanvas support at injection time.
+ * The recommended strategy prefers WebGPU over WebGL and enables worker-based
+ * offscreen rendering when the browser supports it.
  */
 @Injectable({
   providedIn: 'root'
@@ -13,17 +17,20 @@ export class GraphicsRuntime {
   private readonly window = this.document.defaultView;
   private readonly navigator = this.window?.navigator;
 
-  // Checks if both OffscreenCanvas and Web Workers are supported.
+  /** Returns `true` if both `OffscreenCanvas` and Web Workers are available. */
   supportsOffscreen() {
     return this.window && 'OffscreenCanvas' in this.window && typeof this.window.Worker !== 'undefined';
   }
 
-  // Checks if WebGPU is supported.
+  /** Returns `true` if `navigator.gpu` is present. */
   supportsWebGPU() {
     return this.navigator && 'gpu' in this.navigator;
   }
 
-   // Checks if WebGL is supported.
+  /**
+   * Creates a throwaway canvas to probe for WebGL 2 support.
+   * Immediately releases the context to avoid hitting the browser's context limit.
+   */
   supportsWebGL() {
     if(!this.document) {
       return false;
@@ -43,6 +50,7 @@ export class GraphicsRuntime {
     return supported;
   }
 
+  /** Builds a {@link RenderStrategy} preferring WebGPU → WebGL, with offscreen if available. */
   getRecommendedRenderStrategy() {
     const type = this.detectBestRenderType();
 
@@ -56,6 +64,7 @@ export class GraphicsRuntime {
     } as RenderStrategy
   }
 
+  /** Returns the best available API type, or `null` if neither is supported. */
   private detectBestRenderType() {
     // Check WebGPU support first, then WebGL, and finally fallback to Image
     if (this.supportsWebGPU()) {

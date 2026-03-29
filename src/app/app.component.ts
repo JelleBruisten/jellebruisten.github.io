@@ -39,6 +39,13 @@ import { SettingsService } from './settings/setting.service';
   `,
   styles: [':host { display: block; min-height: 100vh; }'],
 })
+/**
+ * Root component that composes the application shell.
+ *
+ * Layers the full-screen shader background, a vignette overlay, the navbar,
+ * and the routed page content. Browser-only children (canvas, settings drawer,
+ * FPS counter) are guarded by `isPlatformBrowser` to prevent SSR failures.
+ */
 export class AppComponent {
   protected isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected settings = inject(SettingsService);

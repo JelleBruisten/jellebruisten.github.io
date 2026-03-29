@@ -112,6 +112,14 @@ import { SpinnerIconComponent } from '../../../shared/icons/spinner-icon.compone
     </div>
   `,
 })
+/**
+ * Renders an individual blog post with lazily loaded HTML content.
+ *
+ * Content is fetched on demand from a static JSON file and rendered via
+ * `bypassSecurityTrustHtml` (safe — content is build-time generated from
+ * developer-authored markdown). Supports Mermaid diagrams via dynamic import
+ * after the content is painted (`afterNextRender`).
+ */
 export class BlogPostComponent {
   private route     = inject(ActivatedRoute);
   private blog      = inject(BlogService);

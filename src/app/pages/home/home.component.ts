@@ -124,6 +124,7 @@ import { ChevronDownIconComponent } from '../../shared/icons/chevron-down-icon.c
     }
   `,
 })
+/** Landing page with hero section, call-to-action links, and the latest 3 blog posts. */
 export class HomeComponent {
   private blog = inject(BlogService);
   protected latestPosts = this.blog.getAllPosts().slice(0, 3);

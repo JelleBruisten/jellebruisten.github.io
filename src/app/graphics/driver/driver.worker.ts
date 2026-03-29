@@ -1,4 +1,12 @@
 /// <reference lib="webworker" />
+/**
+ * Web Worker entry point for offscreen shader rendering.
+ *
+ * Receives `postMessage` commands from the main thread (init, stop, pause,
+ * resume, resize, darkmode, fpsLimit) and delegates to the lazily imported
+ * WebGL or WebGPU driver. Init operations are serialized via a promise chain
+ * to prevent concurrent render loops when rapid shader switches occur.
+ */
 import { type RenderProgramHandles, type RenderStrategy, RenderStrategyType } from "../types";
 
 
@@ -20,6 +28,7 @@ interface BackgroundOptions {
 
 const shaderCache = new Map<string, string>();
 
+/** Fetches and caches shader source files within the worker scope. */
 const resolveShader = async(shaderName: string) => {
   // lazy create map
   if(shaderCache && shaderCache.has(shaderName)) {
@@ -42,6 +51,7 @@ const resolveShader = async(shaderName: string) => {
 let drawCount = 0;
 let fpsInterval: ReturnType<typeof setInterval> | null = null;
 
+/** Starts a 500 ms interval that posts draw FPS back to the main thread. */
 function startFpsReporting() {
   if (fpsInterval) return;
   let lastCount = 0;
@@ -63,6 +73,7 @@ function stopFpsReporting() {
   }
 }
 
+/** Initializes the correct driver (WebGL / WebGPU) for the given strategy and shader. */
 const init = async (evt: BackgroundOptions) => {
   const canvas = evt.canvas as OffscreenCanvas;
   const renderStrategy = evt.strategy as RenderStrategy;

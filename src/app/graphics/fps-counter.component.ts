@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { BackgroundProgramManager } from './manager';
 import { SettingsService } from '../settings/setting.service';
 
+/** Fixed overlay that displays the current draw FPS and the configured FPS limit. */
 @Component({
   selector: 'app-fps-counter',
   changeDetection: ChangeDetectionStrategy.OnPush,
