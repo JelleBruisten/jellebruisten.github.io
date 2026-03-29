@@ -15,6 +15,7 @@ export type SpecialDayName =
   | 'easter'
   | 'halloween'
   | 'day-of-dead'
+  | 'diwali'
   | 'christmas';
 
 interface SpecialDayTheme {
@@ -22,6 +23,8 @@ interface SpecialDayTheme {
   brand: string;
   brandLight: string;
   brandDark: string;
+  greeting: string;
+  wikiUrl?: string;
   cssClass?: string;
 }
 
@@ -37,51 +40,58 @@ const queryAliases: Record<string, SpecialDayName> = {
   'easter': 'easter',
   'halloween': 'halloween', 'hween': 'halloween',
   'dotd': 'day-of-dead', 'day-of-dead': 'day-of-dead', 'dead': 'day-of-dead',
+  'diwali': 'diwali',
   'christmas': 'christmas', 'xmas': 'christmas',
 };
 
 const themes: Record<SpecialDayName, SpecialDayTheme> = {
-  // ── Celebration category (fireworks shader) ──
   'new-year': {
     shader: 'fireworks',
     brand: 'oklch(0.75 0.16 85)',
     brandLight: 'oklch(0.85 0.12 85)',
     brandDark: 'oklch(0.60 0.20 85)',
+    greeting: 'Happy New Year!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/New_Year%27s_Day',
   },
   'birthday': {
     shader: 'fireworks',
     brand: 'oklch(0.75 0.16 85)',
     brandLight: 'oklch(0.82 0.13 85)',
     brandDark: 'oklch(0.62 0.19 85)',
+    greeting: "It's my birthday!",
   },
   'kingsday': {
     shader: 'fireworks-orange',
     brand: 'oklch(0.70 0.18 55)',
     brandLight: 'oklch(0.78 0.15 55)',
     brandDark: 'oklch(0.55 0.22 55)',
+    greeting: 'Happy King\'s Day!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Koningsdag',
   },
-  // ── Love category (hearts shader) ──
   'valentines': {
     shader: 'hearts',
     brand: 'oklch(0.60 0.25 10)',
     brandLight: 'oklch(0.70 0.20 10)',
     brandDark: 'oklch(0.48 0.28 5)',
+    greeting: "Happy Valentine's Day!",
+    wikiUrl: 'https://en.wikipedia.org/wiki/Valentine%27s_Day',
   },
-
-  // ── Party category (confetti shader) ──
   'april-fools': {
     shader: 'confetti',
     brand: 'oklch(0.70 0.25 340)',
     brandLight: 'oklch(0.78 0.20 340)',
     brandDark: 'oklch(0.55 0.28 340)',
+    greeting: "Happy April Fools' Day!",
+    wikiUrl: 'https://en.wikipedia.org/wiki/April_Fools%27_Day',
     cssClass: 'special-april-fools',
   },
-  // ── Spooky category (spooky shader) ──
   'halloween': {
     shader: 'spooky',
     brand: 'oklch(0.70 0.20 55)',
     brandLight: 'oklch(0.65 0.18 310)',
     brandDark: 'oklch(0.55 0.22 45)',
+    greeting: 'Happy Halloween!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Halloween',
     cssClass: 'special-halloween',
   },
   'day-of-dead': {
@@ -89,34 +99,48 @@ const themes: Record<SpecialDayName, SpecialDayTheme> = {
     brand: 'oklch(0.65 0.22 320)',
     brandLight: 'oklch(0.72 0.18 55)',
     brandDark: 'oklch(0.50 0.25 310)',
+    greeting: 'Day of the Dead',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Day_of_the_Dead',
   },
-
-  // ── Winter category (snow shader) ──
+  'diwali': {
+    shader: 'lights',
+    brand: 'oklch(0.70 0.20 55)',
+    brandLight: 'oklch(0.80 0.15 40)',
+    brandDark: 'oklch(0.55 0.22 65)',
+    greeting: 'Happy Diwali!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Diwali',
+  },
   'christmas': {
     shader: 'snow',
     brand: 'oklch(0.55 0.22 27)',
     brandLight: 'oklch(0.58 0.17 145)',
     brandDark: 'oklch(0.42 0.25 27)',
+    greeting: 'Merry Christmas!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Christmas',
   },
-
-  // ── Nature/spring category (aurora shader) ──
   'easter': {
     shader: 'eggs',
     brand: 'oklch(0.72 0.12 300)',
     brandLight: 'oklch(0.82 0.10 340)',
     brandDark: 'oklch(0.60 0.15 280)',
+    greeting: 'Happy Easter!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Easter',
   },
   'st-patricks': {
     shader: 'clovers',
     brand: 'oklch(0.55 0.20 145)',
     brandLight: 'oklch(0.65 0.17 145)',
     brandDark: 'oklch(0.42 0.22 145)',
+    greeting: "Happy St. Patrick's Day!",
+    wikiUrl: 'https://en.wikipedia.org/wiki/Saint_Patrick%27s_Day',
   },
   'earth-day': {
     shader: 'leaves',
     brand: 'oklch(0.55 0.15 165)',
     brandLight: 'oklch(0.65 0.12 165)',
     brandDark: 'oklch(0.42 0.18 165)',
+    greeting: 'Happy Earth Day!',
+    wikiUrl: 'https://en.wikipedia.org/wiki/Earth_Day',
   },
 };
 
@@ -143,6 +167,16 @@ function getEasterDate(year: number): Date {
   return new Date(year, month - 1, day);
 }
 
+/** Approximate Diwali date lookup — accurate for 2024-2035. */
+function getDiwaliDate(year: number): Date {
+  const dates: Record<number, [number, number]> = {
+    2024: [10, 1],  2025: [9, 20],  2026: [10, 8],  2027: [9, 29],
+    2028: [9, 17],  2029: [10, 5],  2030: [9, 26],  2031: [10, 14],
+    2032: [10, 2],  2033: [9, 22],  2034: [10, 11], 2035: [9, 30],
+  };
+  const entry = dates[year];
+  return entry ? new Date(year, entry[0], entry[1]) : new Date(year, 9, 28);
+}
 
 function detectSpecialDay(date: Date): SpecialDayName | null {
   const month = date.getMonth();
@@ -166,6 +200,9 @@ function detectSpecialDay(date: Date): SpecialDayName | null {
   const easterTime = easter.getTime();
   const dateTime = new Date(year, month, day).getTime();
   if (Math.abs(dateTime - easterTime) <= 86_400_000) return 'easter';
+
+  const diwali = getDiwaliDate(year);
+  if (Math.abs(dateTime - diwali.getTime()) <= 86_400_000) return 'diwali';
 
   return null;
 }
@@ -228,6 +265,7 @@ export class SpecialDayService {
     { value: 'easter', label: 'Easter' },
     { value: 'halloween', label: 'Hween' },
     { value: 'day-of-dead', label: 'DotD' },
+    { value: 'diwali', label: 'Diwali' },
     { value: 'christmas', label: 'Xmas' },
   ];
 

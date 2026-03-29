@@ -45,6 +45,7 @@ The site detects holidays and applies themed shaders + brand color overrides aut
 | Easter (variable) | `?special=easter` | Easter Eggs |
 | Halloween (Oct 31) | `?special=halloween` | Spooky |
 | Day of the Dead (Nov 1-2) | `?special=dotd` | Spooky |
+| Diwali (variable) | `?special=diwali` | Lights |
 | Christmas (Dec 24-26) | `?special=xmas` | Snow |
 
 ## Blog

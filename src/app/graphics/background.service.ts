@@ -23,6 +23,7 @@ const specialBackgrounds = [
   'spooky',
   'eggs',
   'leaves',
+  'lights',
 ] as const;
 
 const allBackgrounds = [... standardBackgrounds, ... specialBackgrounds] as const;

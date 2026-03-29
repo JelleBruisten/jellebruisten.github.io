@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe, isPlatformServer } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { BlogService } from '../../services/blog.service';
+import { SpecialDayService } from '../../settings/special-day.service';
 import { GithubIconComponent } from '../../shared/icons/github-icon.component';
 import { LinkedinIconComponent } from '../../shared/icons/linkedin-icon.component';
 import { ArrowRightIconComponent } from '../../shared/icons/arrow-right-icon.component';
@@ -72,8 +73,27 @@ import { ChevronDownIconComponent } from '../../shared/icons/chevron-down-icon.c
           </a>
         </div>
 
+        <!-- Special day greeting -->
+        @if (specialDayTheme(); as theme) {
+          <div class="mt-8">
+            @if (theme.wikiUrl) {
+              <a [href]="theme.wikiUrl" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-2 text-sm font-medium
+                        text-brand-dark dark:text-brand-light
+                        hover:underline transition-colors">
+                {{ theme.greeting }}
+                <app-arrow-right-icon class="text-[14px]" />
+              </a>
+            } @else {
+              <p class="text-sm font-medium text-brand-dark dark:text-brand-light">
+                {{ theme.greeting }}
+              </p>
+            }
+          </div>
+        }
+
         <!-- Scroll hint -->
-        <div class="mt-20 flex justify-center opacity-30 animate-bounce text-slate-600 dark:text-slate-300" aria-hidden="true">
+        <div class="mt-12 flex justify-center opacity-30 animate-bounce text-slate-600 dark:text-slate-300" aria-hidden="true">
           <app-chevron-down-icon class="text-[22px]" />
         </div>
       </div>
@@ -127,7 +147,9 @@ import { ChevronDownIconComponent } from '../../shared/icons/chevron-down-icon.c
 /** Landing page with hero section, call-to-action links, and the latest 3 blog posts. */
 export class HomeComponent {
   private blog = inject(BlogService);
+  private specialDay = inject(SpecialDayService);
   protected latestPosts = this.blog.getAllPosts().slice(0, 3);
+  protected specialDayTheme = this.specialDay.theme;
 
   constructor() {
     if (isPlatformServer(inject(PLATFORM_ID))) {
