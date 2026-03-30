@@ -59,6 +59,6 @@
     "vitest": "^4.1.2"
   },
   "lint-staged": {
-    "*.{ts,html}": "oxfmt --write"
+    "*.{ts,html,css}": "oxfmt --write"
   }
 }
