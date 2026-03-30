@@ -319,8 +319,10 @@ export class SpecialDayService {
 
   readonly detectedDay = detectSpecialDay(new Date());
 
-  /** Query param ?special=... mapped to a SpecialDayName (or 'none'). */
-  private readonly queryOverride = toSignal(
+  /** Query param ?special=... latched for the session — survives navigation. */
+  private readonly queryOverride = signal<SpecialDayName | "none" | null>(null);
+
+  private readonly queryParam = toSignal(
     this.route.queryParamMap.pipe(
       map((params) => {
         const param = params.get("special")?.toLowerCase();
@@ -370,6 +372,13 @@ export class SpecialDayService {
   ];
 
   constructor() {
+    // Latch query param: once ?special= is seen, persist it for the session.
+    // Only a new ?special= value or a hard refresh resets it.
+    effect(() => {
+      const param = this.queryParam();
+      if (param !== null) this.queryOverride.set(param);
+    });
+
     effect(() => {
       const theme = this.theme();
       const el = this.document.documentElement;
