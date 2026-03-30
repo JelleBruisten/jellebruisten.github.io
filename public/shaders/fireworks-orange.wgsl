@@ -41,7 +41,7 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
         let phase = (t + h2 * cycle) % cycle;
         let launchTime = 0.8;
 
-        let rx = 0.15 + h1 * 0.7;
+        let rx = 0.1 + (fr + 0.2 + h1 * 0.6) / f32(NUM_ROCKETS) * 0.8;
         let burstY = 0.1 + h3 * 0.35;
 
         if (phase < launchTime) {

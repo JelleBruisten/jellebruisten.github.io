@@ -33,7 +33,7 @@ void main() {
         float phase = mod(t + h2 * cycle, cycle);
         float launchTime = 0.8;
 
-        float rx = 0.15 + h1 * 0.7;
+        float rx = 0.1 + (fr + 0.2 + h1 * 0.6) / float(NUM_ROCKETS) * 0.8;
         float burstY = 0.55 + h3 * 0.35;
 
         if (phase < launchTime) {

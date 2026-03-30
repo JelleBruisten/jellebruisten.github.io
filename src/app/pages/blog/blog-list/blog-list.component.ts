@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, PLATFORM_ID } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  isDevMode,
+  PLATFORM_ID,
+  signal,
+} from "@angular/core";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { DatePipe, isPlatformServer } from "@angular/common";
 import { Meta, Title } from "@angular/platform-browser";
@@ -26,6 +34,25 @@ import { ArrowRightIconComponent } from "../../../shared/icons/arrow-right-icon.
         </p>
       </div>
 
+      <!-- Dev: toggle scheduled posts -->
+      @if (isDevMode && scheduledCount()) {
+        <button
+          (click)="showScheduled.set(!showScheduled())"
+          class="mb-4 inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors"
+          [class]="
+            showScheduled()
+              ? 'border-amber-400/60 bg-amber-400/15 text-amber-300 hover:bg-amber-400/25'
+              : 'border-slate-600 bg-slate-800/60 text-slate-400 hover:bg-slate-700/60'
+          "
+        >
+          <span
+            class="inline-block w-2 h-2 rounded-full"
+            [class]="showScheduled() ? 'bg-amber-400' : 'bg-slate-500'"
+          ></span>
+          {{ showScheduled() ? "Hiding" : "Showing" }} {{ scheduledCount() }} scheduled
+        </button>
+      }
+
       <!-- Active tag filter -->
       @if (activeTag()) {
         <div class="flex items-center gap-3 mb-6">
@@ -45,7 +72,12 @@ import { ArrowRightIconComponent } from "../../../shared/icons/arrow-right-icon.
         @for (post of posts(); track post.slug) {
           <a
             [routerLink]="['/blog', post.slug]"
-            class="group block bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-6 sm:p-8 hover:border-brand/40 dark:hover:border-brand-light/40 hover:bg-brand/5 dark:hover:bg-brand-light/5 transition-all"
+            class="group block rounded-2xl border p-6 sm:p-8 backdrop-blur-md transition-all"
+            [class]="
+              blog.isScheduled(post)
+                ? 'bg-amber-500/5 dark:bg-amber-400/5 border-amber-400/30 dark:border-amber-400/20 hover:border-amber-400/50 dark:hover:border-amber-400/40'
+                : 'bg-white/60 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-700/60 hover:border-brand/40 dark:hover:border-brand-light/40 hover:bg-brand/5 dark:hover:bg-brand-light/5'
+            "
           >
             <div class="flex items-start justify-between gap-4 flex-wrap">
               <div class="flex-1 min-w-0">
@@ -84,8 +116,16 @@ import { ArrowRightIconComponent } from "../../../shared/icons/arrow-right-icon.
               />
             </div>
 
-            <div class="mt-4 text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ post.date | date: "longDate" }} &middot; {{ post.readTime }} min read
+            <div
+              class="mt-4 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400"
+            >
+              @if (blog.isScheduled(post)) {
+                <span
+                  class="px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-600 dark:text-amber-400 border border-amber-400/30"
+                  >Unpublished</span
+                >
+              }
+              <span>{{ post.date | date: "longDate" }} &middot; {{ post.readTime }} min read</span>
             </div>
           </a>
         } @empty {
@@ -103,7 +143,9 @@ import { ArrowRightIconComponent } from "../../../shared/icons/arrow-right-icon.
 })
 /** Filterable blog post listing with tag-based query param navigation. */
 export class BlogListComponent {
-  private blog = inject(BlogService);
+  protected readonly blog = inject(BlogService);
+  protected readonly isDevMode = isDevMode();
+  protected readonly showScheduled = signal(false);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -121,9 +163,16 @@ export class BlogListComponent {
     initialValue: "",
   });
 
+  protected scheduledCount = computed(
+    () => this.blog.getAllPosts().length - this.blog.getPublishedPosts().length,
+  );
+
   protected posts = computed(() => {
     const tag = this.activeTag();
-    const all = this.blog.getAllPosts();
+    const all =
+      this.isDevMode && this.showScheduled()
+        ? this.blog.getAllPosts()
+        : this.blog.getPublishedPosts();
     return tag ? all.filter((p) => p.tags.includes(tag)) : all;
   });
 

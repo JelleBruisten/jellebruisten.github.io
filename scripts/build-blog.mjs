@@ -104,7 +104,12 @@ async function buildBlog() {
   const enabled = posts.filter(p => p.enabled);
   enabled.sort((a, b) => b.date.localeCompare(a.date));
 
-  // Write individual content JSON files
+  // Published = enabled AND not future-dated (used for sitemap/routes only)
+  const today = new Date().toISOString().split('T')[0];
+  const published = enabled.filter(p => p.date <= today);
+  const scheduled = enabled.length - published.length;
+
+  // Write individual content JSON files (all enabled, including scheduled)
   await Promise.all(enabled.map(post =>
     writeFile(
       join(blogContentDir, `${post.slug}.json`),
@@ -113,7 +118,7 @@ async function buildBlog() {
     )
   ));
 
-  // Generate TypeScript — metadata only, no content
+  // Generate TypeScript — metadata only, no content (all enabled, including scheduled)
   const metadata = enabled.map(({ content, ...meta }) => meta);
   const ts = [
     '// AUTO-GENERATED — do not edit manually.',
@@ -135,12 +140,11 @@ async function buildBlog() {
 
   await writeFile(join(generatedDir, 'blog-data.ts'), ts, 'utf-8');
 
-  // Generate routes.txt for Angular prerender
-  const routes = ['/', '/about', '/blog', ...enabled.map(p => `/blog/${p.slug}`)];
+  // Generate routes.txt for Angular prerender (published only — no scheduled)
+  const routes = ['/', '/about', '/blog', ...published.map(p => `/blog/${p.slug}`)];
   await writeFile(routesFile, routes.join('\n') + '\n', 'utf-8');
 
-  // Generate sitemap.xml
-  const today = new Date().toISOString().split('T')[0];
+  // Generate sitemap.xml (published only — no scheduled)
   const staticPages = [
     { path: '/',        priority: '1.0', changefreq: 'monthly' },
     { path: '/about',  priority: '0.8', changefreq: 'monthly' },
@@ -154,7 +158,7 @@ async function buildBlog() {
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`),
-    ...enabled.map(p => `
+    ...published.map(p => `
   <url>
     <loc>${SITE_URL}/blog/${p.slug}/</loc>
     <lastmod>${p.date}</lastmod>
@@ -167,10 +171,10 @@ async function buildBlog() {
 </urlset>\n`;
   await writeFile(sitemapFile, sitemap, 'utf-8');
 
-  console.log(`✓ Blog: generated ${enabled.length} posts (${posts.length - enabled.length} disabled)`);
+  console.log(`✓ Blog: generated ${enabled.length} posts (${posts.length - enabled.length} disabled, ${scheduled} scheduled)`);
   console.log(`✓ Content: ${enabled.length} JSON files written to public/content/blog/`);
   console.log(`✓ Routes: ${routes.length} routes written to routes.txt`);
-  console.log(`✓ Sitemap: ${staticPages.length + enabled.length} URLs written to public/sitemap.xml`);
+  console.log(`✓ Sitemap: ${staticPages.length + published.length} URLs written to public/sitemap.xml`);
 }
 
 buildBlog().catch((err) => {
