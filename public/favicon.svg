@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b7cf6"/>
+      <stop offset="100%" stop-color="#6949d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#020617"/>
+  <text y="23">
+    <tspan x="4" font-family="'Cascadia Code','Fira Code',ui-monospace,monospace" font-weight="600" font-size="18" fill="#f1f5f9">J</tspan>
+    <tspan x="15" font-family="'Inter',system-ui,sans-serif" font-weight="700" font-size="18" fill="url(#g)">B</tspan>
+  </text>
+</svg>
