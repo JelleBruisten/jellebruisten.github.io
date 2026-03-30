@@ -1,5 +1,5 @@
 import {
-  afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -161,8 +161,9 @@ export class BlogPostComponent {
       });
     }
 
-    // afterNextRender is browser-only — safe with SSR, runs after [innerHTML] is painted
-    afterNextRender(async () => {
+    // Re-runs when safeContent changes — renders mermaid diagrams after content is painted
+    afterRenderEffect(async () => {
+      this.safeContent(); // track content signal
       const nodes = (this.el.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
         "pre.mermaid",
       );

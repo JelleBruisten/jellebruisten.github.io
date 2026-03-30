@@ -57,10 +57,6 @@ flowchart TD
     E -->|WebGPU| G[WebGPU Driver]
     E -->|WebGL + Worker| H[Worker + WebGL Driver]
     E -->|WebGL| I[WebGL Driver]
-    F --> C
-    G --> C
-    H --> C
-    I --> C
 ```
 
 ## WebGPU First, WebGL Fallback
