@@ -153,7 +153,7 @@ The same applies to `takeUntilDestroyed`. Keep it as the **last operator** befor
 
 In real-world applications, HTTP requests rarely go directly into a component. State lives in a store, and components read from it. This changes the subscription picture entirely: **the component subscribes to nothing**. The store owns the lifecycle.
 
-### NgRx Store (selector to signal)
+### NgRx ComponentStore (selector to signal)
 
 ```typescript
 @Component({ ... })
@@ -224,9 +224,11 @@ Angular 19 added `rxResource` as a signal-based abstraction for local async load
 // ⚠️ Experimental API, check Angular release notes before using in production
 import { rxResource } from '@angular/core/rxjs-interop';
 
+private userService = inject(UserService);
+
 protected userResource = rxResource({
   request: () => ({ id: this.userId() }),
-  loader: ({ request }) => inject(UserService).getUser(request.id)
+  loader: ({ request }) => this.userService.getUser(request.id)
 });
 ```
 
@@ -234,21 +236,21 @@ It handles loading state, cancellation, and cleanup automatically. If you're bui
 
 ## Direct Cleanup with `DestroyRef`
 
-For non-observable resources like `setInterval`, WebSocket connections, and third-party listeners, use `DestroyRef.onDestroy` directly:
+For non-observable resources like `ResizeObserver`, `IntersectionObserver`, and third-party library instances, use `DestroyRef.onDestroy` directly:
 
 ```typescript
-@Injectable({ providedIn: "root" })
-export class WebSocketService {
+@Component({ ... })
+export class ChartComponent {
+  private el = inject(ElementRef);
   private destroyRef = inject(DestroyRef);
 
-  connect(url: string) {
-    const ws = new WebSocket(url);
-
-    this.destroyRef.onDestroy(() => {
-      ws.close();
+  constructor() {
+    const observer = new ResizeObserver(entries => {
+      this.redrawChart(entries[0].contentRect);
     });
+    observer.observe(this.el.nativeElement);
 
-    return fromEvent<MessageEvent>(ws, "message").pipe(map((e) => JSON.parse(e.data)));
+    this.destroyRef.onDestroy(() => observer.disconnect());
   }
 }
 ```

@@ -29,7 +29,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "WebGPU is the successor to WebGL, bringing compute shaders and modern GPU APIs to the web. Here's how to set one up from scratch — no game engine required.",
     tags: ["webgpu", "graphics", "typescript"],
-    readTime: 4,
+    readTime: 5,
     enabled: true,
   },
   {
@@ -59,7 +59,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Cookie flags and prefixes are a small surface area with a big impact on session security. Here's what HttpOnly, Secure, SameSite, and cookie prefixes actually enforce.",
     tags: ["security", "http", "cookies"],
-    readTime: 4,
+    readTime: 5,
     enabled: true,
   },
   {

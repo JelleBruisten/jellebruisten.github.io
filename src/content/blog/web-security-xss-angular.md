@@ -107,18 +107,15 @@ The rule is strict: only bypass for content you control end-to-end. Never for an
 If you are storing user-generated HTML, sanitize it server-side before it touches the database. [DOMPurify](https://github.com/cure53/DOMPurify) is the standard choice for this. Sanitize on write, not on read, so even if your rendering logic changes the content is already clean. Then, if you need to render that pre-sanitized HTML in Angular, bypass is appropriate because you already cleaned it.
 
 ```typescript
-// Server-side (Node.js) before saving to DB
 import DOMPurify from "dompurify";
-const clean = DOMPurify.sanitize(userHtml);
-await db.comments.insert({ content: clean });
-
+const comment = DOMPurify.sanitize(userHtml);
 // Angular component: content is pre-sanitized, bypass is safe here
-safeComment: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(comment.content);
+safeComment: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(comment);
 ```
 
 ## `encodeURIComponent` and Path Traversal
 
-User input in URLs is another injection surface. If you interpolate a value directly into a URL path, an attacker can supply `../../admin` and change which resource gets requested.
+Path traversal is not XSS, but it is a related injection vulnerability that often appears alongside it. User input in URLs is another injection surface. If you interpolate a value directly into a URL path, an attacker can supply `../../admin` and change which resource gets requested.
 
 ```typescript
 // Vulnerable: id could be '../../admin' or '../users/other-user'

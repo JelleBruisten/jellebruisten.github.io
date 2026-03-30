@@ -44,7 +44,7 @@ Cross-Origin-Opener-Policy: same-origin
 COOP controls whether your page and a window it opens (or that opened it) can access each other's JavaScript context via `window.opener`.
 
 - `same-origin`: your page gets its own browsing context group. Cross-origin windows that open your page, or that your page opens, receive a null `opener` reference and cannot communicate with your JS context.
-- `same-origin-allow-popups`: same-origin popups can still communicate back. Use this when you have same-origin OAuth or other same-origin popup flows.
+- `same-origin-allow-popups`: popups your page opens can still communicate back via `window.opener`. Use this when you have OAuth or payment popup flows that need to message the opener.
 
 The threat model here is Spectre-class attacks. If two pages share a browsing context group, a malicious page could use timing attacks via shared memory or cross-window references to read data from your page. Isolating your context with `same-origin` removes that channel.
 
@@ -82,7 +82,7 @@ When a user follows a link from your site to another, the browser sends a `Refer
 
 - Same-origin navigation: full URL is sent.
 - Cross-origin navigation: only the origin is sent (e.g., `https://example.com`, not the path).
-- HTTP to HTTPS downgrade: nothing is sent.
+- HTTPS to HTTP downgrade: nothing is sent.
 
 Other values worth knowing:
 
@@ -103,6 +103,14 @@ This header matters most when you embed third-party content. Without it, an ifra
 
 This header replaces the older `Feature-Policy` header, which had a different syntax and inconsistent browser support.
 
+## X-Content-Type-Options
+
+```
+X-Content-Type-Options: nosniff
+```
+
+Prevents the browser from MIME-sniffing a response away from the declared `Content-Type`. Without it, the browser may interpret a JSON or text response as HTML or JavaScript if the content looks executable, opening an injection vector. Always set this.
+
 ## Quick Reference
 
 | Header                                     | Protects against                  | Recommended value                     |
@@ -113,6 +121,7 @@ This header replaces the older `Feature-Policy` header, which had a different sy
 | `Cross-Origin-Opener-Policy`               | Cross-window Spectre attacks      | `same-origin`                         |
 | `Cross-Origin-Embedder-Policy`             | Cross-origin data leaks           | `require-corp` or `credentialless`    |
 | `Referrer-Policy`                          | URL leakage via Referer           | `strict-origin-when-cross-origin`     |
+| `X-Content-Type-Options`                   | MIME-sniffing attacks             | `nosniff`                             |
 | `Permissions-Policy`                       | Feature abuse by embedded content | restrict to what you need             |
 
 ## Series Navigation

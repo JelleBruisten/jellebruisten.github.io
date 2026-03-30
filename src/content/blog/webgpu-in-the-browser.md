@@ -143,7 +143,7 @@ requestAnimationFrame(frame);
 
 ## Running in a Web Worker
 
-For heavy shaders, you can hand the canvas off to a Web Worker via `OffscreenCanvas`. This moves all GPU work off the main thread:
+For heavy shaders, you can hand the canvas off to a Web Worker via `OffscreenCanvas`. This moves all CPU-side GPU orchestration off the main thread:
 
 ```typescript
 // main thread
@@ -172,7 +172,24 @@ fn main(@builtin(global_invocation_id) id: vec3u) {
 }
 ```
 
-Dispatch it from JavaScript, read the results back — perfect for image processing, physics, or on-device ML inference.
+Dispatch it from JavaScript and read the results back:
+
+```typescript
+const computePipeline = device.createComputePipeline({
+  layout: "auto",
+  compute: { module: device.createShaderModule({ code: computeWgsl }), entryPoint: "main" },
+});
+
+const encoder = device.createCommandEncoder();
+const pass = encoder.beginComputePass();
+pass.setPipeline(computePipeline);
+pass.setBindGroup(0, bindGroup);
+pass.dispatchWorkgroups(Math.ceil(dataLength / 64));
+pass.end();
+device.queue.submit([encoder.finish()]);
+```
+
+Reading results back requires a staging buffer with `MAP_READ` usage and an `await buffer.mapAsync(GPUMapMode.READ)` call. This pattern is perfect for image processing, physics, or on-device ML inference.
 
 ## Conclusion
 

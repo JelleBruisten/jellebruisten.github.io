@@ -39,11 +39,22 @@ Set-Cookie: session=abc123; SameSite=None; Secure
 
 **`Strict`**: the cookie is never sent on cross-site requests, including top-level navigations. If a user clicks a link from another site to your app, the first request arrives without the cookie. This is the maximum protection against CSRF, but it breaks flows where arriving via an external link should land in an authenticated state, such as links in notification emails pointing to a logged-in page.
 
-**`Lax`**: the cookie is sent on same-site requests and on top-level navigations (clicking a link). It is not sent on cross-origin `fetch`, `<img>` requests, or form `POST` submissions. This is a good default for most session cookies. Modern browsers default to `Lax` if you omit the `SameSite` attribute entirely, but it is better to set it explicitly.
+**`Lax`**: the cookie is sent on same-site requests and on top-level navigations (clicking a link). It is not sent on cross-site `fetch`, `<img>` requests, or form `POST` submissions. This is a good default for most session cookies. Modern browsers default to `Lax` if you omit the `SameSite` attribute entirely, but it is better to set it explicitly.
 
 **`None`**: the cookie is sent on all cross-site requests. This must be paired with the `Secure` flag, or the browser will reject it. Use `None` for embedded widgets, OAuth flows that cross origins, and payment iframes.
 
-**SameSite and CSRF**: `SameSite=Lax` or `Strict` defeats most CSRF attacks because a cross-origin form `POST` won't include the session cookie. You may still want a CSRF token for defence in depth, particularly if you need to support older browsers that don't enforce `SameSite` defaults.
+**SameSite and CSRF**: `SameSite=Lax` or `Strict` defeats most CSRF attacks because a cross-site form `POST` won't include the session cookie.
+
+For defence in depth, a modern alternative to CSRF tokens is server-side verification of the `Sec-Fetch-Site` header. Every major browser has sent this header since March 2023. A middleware that rejects state-changing requests where `Sec-Fetch-Site` is `cross-site` — while allowing `same-origin`, `same-site`, and `none` (user-initiated) — stops CSRF without tokens, hidden form fields, or client-side coordination:
+
+```
+Sec-Fetch-Site: cross-site   → reject
+Sec-Fetch-Site: same-origin   → allow
+Sec-Fetch-Site: same-site     → allow
+Sec-Fetch-Site: none          → allow (user-initiated navigation)
+```
+
+Combine this with an `Origin` header check against a trusted allow-list as a fallback, and you have a robust, stateless CSRF defence that works independently of cookie flags.
 
 ## Cookie Prefixes
 
@@ -81,7 +92,7 @@ What each flag prevents:
 - **`Path=/`**: the cookie is scoped to the whole origin, not a subdirectory
 - **`SameSite=Strict`**: the cookie is not sent on cross-site requests, defeating CSRF
 
-If `SameSite=Strict` breaks authenticated deep links (email links, OAuth redirects), `Lax` is an acceptable fallback while still blocking cross-origin form attacks.
+If `SameSite=Strict` breaks authenticated deep links (email links, OAuth redirects), `Lax` is an acceptable fallback while still blocking cross-site form attacks.
 
 ## What Angular Can and Cannot Do
 
@@ -95,4 +106,4 @@ Bring this checklist to your backend team: `HttpOnly` and `Secure` on every sess
 
 ---
 
-This is the final post in the series. See [Part 3: HTTP Security Headers](/blog/web-security-http-headers) for response headers that protect against clickjacking, MIME sniffing, and more, or start from the beginning with [Part 1: XSS in Angular](/blog/web-security-xss-angular).
+This is the final post in the series. See [Part 3: HTTP Security Headers](/blog/web-security-http-headers) for response headers that protect against clickjacking, MIME sniffing, and more, or start from the beginning with [Part 1: XSS in Angular](/blog/web-security-xss-angular). Part 2 covers [CSP and Trusted Types](/blog/web-security-csp-trusted-types).

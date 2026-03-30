@@ -210,12 +210,12 @@ stateDiagram-v2
 gitGraph
     commit id: "init"
     commit id: "add router"
-    branch feature/blog
-    checkout feature/blog
+    branch feature-blog
+    checkout feature-blog
     commit id: "blog list"
     commit id: "blog post"
     commit id: "syntax highlighting"
     checkout main
-    merge feature/blog id: "merge blog"
+    merge feature-blog id: "merge blog"
     commit id: "deploy"
 ```

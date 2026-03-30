@@ -41,7 +41,7 @@ interface RenderProgramHandles {
   resume(): void;
   stop(): void;
   resize(width: number, height: number): void;
-  setDarkMode(value: number): void;
+  darkmode(darkmode: number): void;
 }
 ```
 
@@ -112,9 +112,7 @@ const uniformData = new Float32Array([
 device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer);
 ```
 
-`accumulatedTime` is the sum of frame deltas, capped at 50ms per frame. Without the cap, a browser tab that's been backgrounded for a minute would resume and send a 60-second time jump to the shader, which causes most noise-based shaders to produce garbage for a few frames.
-
-On mobile (viewport width under 768px), the canvas renders at half resolution. This cuts the fragment shader invocations to a quarter and makes a real difference on lower-end devices, with no visible quality loss at typical viewing distance.
+`accumulatedTime` is the sum of frame deltas, capped at 50ms per frame in the WebGL driver. Without the cap, a browser tab that's been backgrounded for a minute would resume and send a 60-second time jump to the shader, which causes most noise-based shaders to produce garbage for a few frames.
 
 ## Dark Mode as a Uniform
 
@@ -136,7 +134,7 @@ Where the browser supports `OffscreenCanvas`, the rendering runs in a Web Worker
 ```typescript
 worker.postMessage({ type: "init", shaderName: "aurora" });
 worker.postMessage({ type: "resize", width: 1280, height: 720 });
-worker.postMessage({ type: "darkmode", value: 0.2 });
+worker.postMessage({ type: "darkmode", dark: 0.2 });
 ```
 
 Inside the worker, the driver runs its own `requestAnimationFrame` loop (via the offscreen canvas's equivalent). The GPU work, shader compilation, and buffer updates never block the UI thread. Scrolling, animations, and interactions on the page are unaffected.
@@ -165,11 +163,11 @@ if (d_sq < CONN_THRESHOLD_SQ) {
 
 **Ocean** is the most expensive shader. It runs 90 iterations of raymarching to find the water surface, then samples five octaves of cosine waves to compute the surface height at each point. Colour accumulates across the march using a rainbow cycling formula, giving the caustic interference pattern. The result is tonemapped with a tanh curve to bring the HDR accumulation back into displayable range.
 
-**Perlin** generates fine contour-like lines by running a 3D Perlin noise function (the third dimension is time) and passing the result through a sine function with a high frequency multiplier. The line width uses `fwidth()` — a derivative-based measure of how fast the value is changing — to antialias the lines regardless of zoom or resolution.
+**Perlin** generates fine contour-like lines by running a 3D simplex noise function (the third dimension is time) and passing the result through a sine function with a high frequency multiplier. The line width uses `fwidth()` — a derivative-based measure of how fast the value is changing — to antialias the lines regardless of zoom or resolution.
 
-**Snow** draws 200 snowflakes each frame. Every flake has a seeded hash for its horizontal position, fall speed, and size. A horizontal blizzard drift is applied with `sin(time)` across all flakes. On narrow screens, the radius multiplier increases so the flakes remain visible.
+**Snow** draws up to 200 snowflakes each frame, scaled dynamically by viewport area. Every flake has a seeded hash for its horizontal position, fall speed, and size. A horizontal blizzard drift is applied with `sin(time)` across all flakes. On narrow screens, the radius multiplier increases so the flakes remain visible.
 
-**Shapes** uses signed distance fields (SDF) and morphing. Three layers of shapes descend from the top of the screen, each at a different speed and density. As a shape moves down the screen, its SDF interpolates from a rounded rectangle toward a circle using a smoothstep on the vertical position.
+**Shapes** uses signed distance fields (SDF) and morphing. Three layers of shapes rise from the bottom of the screen, each at a different speed and density. As a shape moves up the screen, its SDF interpolates from a rounded rectangle toward a circle using a smoothstep on the vertical position.
 
 ## Shaders Not in Rotation
 
