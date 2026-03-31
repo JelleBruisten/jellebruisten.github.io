@@ -31,8 +31,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "mermaid": "^11.13.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^21.2.0",
