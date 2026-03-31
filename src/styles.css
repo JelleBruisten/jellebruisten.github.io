@@ -86,6 +86,17 @@
 /* Class-based dark mode — SettingsService toggles .dark on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Smooth dark ↔ light transition: lowest-specificity rule so component
+   transitions (hover, focus, etc.) override it naturally. */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease;
+}
+
 @theme {
   --font-sans: "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
 
@@ -106,6 +117,15 @@ app-root {
   /* Deep navy base so the page is readable even before the aurora canvas loads */
   background-color: rgb(2 6 23);
   color: rgb(241 245 249);
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
+}
+html:not(.dark),
+html:not(.dark) body,
+html:not(.dark) app-root {
+  background-color: rgb(240 245 255);
+  color: rgb(15 23 42);
 }
 
 html {

@@ -68,7 +68,7 @@ export class BackgroundComponent {
 
     effect(() => {
       const dark = this.settings.darkLevel();
-      this.programRef?.programHandle?.darkmode(dark);
+      this.tweenShaderDark(dark);
     });
 
     effect(() => {
@@ -89,6 +89,35 @@ export class BackgroundComponent {
           break;
       }
     });
+  }
+
+  /** Current dark level sent to the shader — tracked outside signals to avoid re-triggering effects. */
+  private shaderDark = NaN;
+  private darkRafId = 0;
+
+  /** Smoothly animates the shader's dark uniform toward `target` over 300 ms. */
+  private tweenShaderDark(target: number): void {
+    cancelAnimationFrame(this.darkRafId);
+    const from = this.shaderDark;
+
+    // First call (or same value) → apply immediately, no animation
+    if (isNaN(from) || from === target) {
+      this.shaderDark = target;
+      this.programRef?.programHandle?.darkmode(target);
+      return;
+    }
+
+    const duration = 300;
+    const startTime = performance.now();
+    const tick = () => {
+      /** 0 → 1 normalized progress of the animation (clamped so it never overshoots). */
+      const progress = Math.min((performance.now() - startTime) / duration, 1);
+      const eased = progress * progress * (3 - 2 * progress); // smoothstep
+      this.shaderDark = from + (target - from) * eased;
+      this.programRef?.programHandle?.darkmode(this.shaderDark);
+      if (progress < 1) this.darkRafId = requestAnimationFrame(tick);
+    };
+    this.darkRafId = requestAnimationFrame(tick);
   }
 
   /**

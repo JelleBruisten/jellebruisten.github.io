@@ -6,7 +6,6 @@ import { FpsCounterComponent } from "./graphics/fps-counter.component";
 import { NavbarComponent } from "./layout/navbar/navbar.component";
 import { SettingsDrawerComponent } from "./layout/settings-drawer/settings-drawer.component";
 import { SettingsService } from "./settings/setting.service";
-import { SpecialDayService } from "./settings/special-day.service";
 
 @Component({
   selector: "app-root",
@@ -29,7 +28,13 @@ import { SpecialDayService } from "./settings/special-day.service";
 
     <!-- Vignette: softens the background edges -->
     <div
-      style="position: fixed; inset: 0; z-index: 3; pointer-events: none"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+        transition: background 300ms ease;
+      "
       [style.visibility]="contentHidden() ? 'hidden' : 'visible'"
       [style.background]="
         settings.effectiveDark()
@@ -49,6 +54,7 @@ import { SpecialDayService } from "./settings/special-day.service";
         class="flex-1"
         id="main-content"
         tabindex="-1"
+        style="transition: background 300ms ease"
         [style.background]="settings.effectiveDark() ? 'rgba(2,6,23,0.55)' : 'rgba(240,245,255,0.38)'"
       >
         <router-outlet></router-outlet>
@@ -68,7 +74,6 @@ export class AppComponent {
   protected isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   protected settings = inject(SettingsService);
   protected contentHidden = signal(false);
-  private specialDay = inject(SpecialDayService);
 
   @HostListener("document:keydown", ["$event"])
   onKeydown(event: KeyboardEvent): void {
