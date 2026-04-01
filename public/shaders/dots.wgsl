@@ -20,6 +20,7 @@ struct Uniforms {
     iResolution: vec2f, // Screen resolution
     iTime: f32,         // Time
     iDarkmode: f32,
+    iQuality: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -99,7 +100,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     mouse = mouse * rot * 0.5;
 
     // Smoother accumulation and layer effects
-    for (var i = 0.0; i <= 1.0; i = i + 0.2) {
+    let STEP = mix(0.4, 0.2, uniforms.iQuality);
+    for (var i = 0.0; i <= 1.0; i = i + STEP) {
         let z = fract(i + time);
         let size = mix(10.0, 0.5, z);
         let fade = smoothstep(0.0, 0.5, z) * (1.0 - smoothstep(0.8, 1.0, z));

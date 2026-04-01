@@ -12,6 +12,8 @@ export interface ProgramRef {
   readonly programHandle: RenderProgramHandles | null;
   readonly canvas: HTMLCanvasElement;
   readonly destroy: () => void;
+  /** Current resolution scale factor (0.5 – 1.0). */
+  scale: number;
 }
 
 type Settings = Record<string, boolean | number>;
@@ -105,7 +107,7 @@ export class BackgroundProgramManager {
     this.currentProgram?.destroy();
     this.stopDrawFpsMeasurement();
 
-    const scale = 1.0;
+    const scale = (settings?.["qualityScale"] as number) ?? 1.0;
 
     // create a new canvas and apply current window size
     const canvas = this.document.createElement("canvas");
@@ -146,6 +148,7 @@ export class BackgroundProgramManager {
       strategy: renderStrategy,
       programHandle: programHandles,
       canvas: canvas,
+      scale: scale,
       destroy: () => {
         // stop program, remove canvas and terminate the worker if there is any
         programHandles?.stop();
@@ -217,6 +220,9 @@ export class BackgroundProgramManager {
       },
       setFpsLimit: (fps) => {
         worker?.postMessage({ type: "fpsLimit", fps: fps });
+      },
+      setQuality: (quality) => {
+        worker?.postMessage({ type: "quality", quality: quality });
       },
     };
 

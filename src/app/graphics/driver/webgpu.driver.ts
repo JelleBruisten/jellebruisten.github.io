@@ -49,11 +49,13 @@ export async function webGPUDriver(
     iResolution: [canvas.width, canvas.height],
     iTime: 0.0,
     iDarkMode: clamp(options.settings["dark"] as number, darkModeColor, lightModeColor),
+    iQuality: (options.settings["quality"] as number) ?? 1.0,
   };
 
   // Create a uniform buffer
+  // Layout: vec2f(8) + f32(4) + f32(4) + f32(4) = 20 bytes, rounded to struct align(8) = 24
   const uniformBuffer = device.createBuffer({
-    size: 16, // vec2 (8 bytes) + float (4 bytes) + float (4 bytes) darkmode
+    size: 24,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
@@ -115,6 +117,8 @@ export async function webGPUDriver(
       uniforms.iResolution[1],
       uniforms.iTime,
       uniforms.iDarkMode,
+      uniforms.iQuality,
+      0.0, // padding to 24 bytes (struct align 8)
     ]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer);
   };
@@ -209,6 +213,9 @@ export async function webGPUDriver(
     },
     setFpsLimit: (fps) => {
       minFrameTime = fps > 0 ? 1000 / fps : 0;
+    },
+    setQuality: (quality) => {
+      uniforms.iQuality = quality;
     },
   } satisfies RenderProgramHandles;
 }

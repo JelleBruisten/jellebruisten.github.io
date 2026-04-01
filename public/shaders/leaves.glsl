@@ -5,6 +5,7 @@ out vec4 fragColor;
 uniform highp vec2 u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 
 float hash(float n) {
     return fract(sin(n * 127.1) * 43758.5453);
@@ -44,7 +45,8 @@ void main() {
     vec3 bg = mix(vec3(0.90, 0.94, 0.90), vec3(0.02, 0.05, 0.03), dark);
     vec3 col = bg;
 
-    int count = clamp(int(sqrt(u_resolution.x * u_resolution.y) * 0.02), 5, 25);
+    float qScale = mix(0.35, 1.0, u_quality);
+    int count = clamp(int(sqrt(u_resolution.x * u_resolution.y) * 0.02 * qScale), 3, 25);
     float t = u_time;
 
     for (int i = 0; i < 30; i++) {

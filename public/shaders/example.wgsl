@@ -19,6 +19,7 @@ struct Uniforms {
     iResolution: vec2f, // Screen resolution
     iTime: f32,         // Time
     iDarkmode: f32,
+    iQuality: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;

@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -62,8 +63,9 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let skyLight = mix(vec3f(0.940, 0.948, 0.995), vec3f(0.740, 0.830, 0.975), uv.y);
     var col = mix(skyLight, skyDark, darkness);
 
-    // ── Five aurora ribbons ──────────────────────────────────────────────────
-    for (var i: i32 = 0; i < 5; i++) {
+    // ── Aurora ribbons (2–5 depending on quality) ─────────────────────────────
+    let RIBBONS = i32(mix(2.0, 5.0, uniforms.iQuality));
+    for (var i: i32 = 0; i < RIBBONS; i++) {
         let fi   = f32(i);
         let seed = fi * 6.17;
 

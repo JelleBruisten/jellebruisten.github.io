@@ -5,6 +5,7 @@ out vec4 fragColor;
 uniform highp vec2 u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 
 float hash(float n) {
     return fract(sin(n * 127.1) * 43758.5453);
@@ -19,8 +20,8 @@ void main() {
     vec3 bg = mix(vec3(0.88, 0.90, 0.94), vec3(0.02, 0.02, 0.06), dark);
     vec3 col = bg;
 
-    const int NUM_ROCKETS = 6;
-    const int SPARKS = 40;
+    int NUM_ROCKETS = int(mix(3.0, 6.0, u_quality));
+    int SPARKS = int(mix(15.0, 40.0, u_quality));
     float t = u_time;
 
     for (int r = 0; r < NUM_ROCKETS; r++) {

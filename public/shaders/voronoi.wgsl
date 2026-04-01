@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -63,7 +64,7 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let t        = uniforms.iTime;
     let darkness = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
 
-    let NS = 48;
+    let NS = i32(mix(16.0, 48.0, uniforms.iQuality));
     var d1: f32 = 1e5;
     var d2: f32 = 1e5;
     var id: i32 = 0;

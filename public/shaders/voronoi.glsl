@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
@@ -52,7 +53,7 @@ void main() {
     float t        = u_time;
     float darkness = clamp(1.0 - (u_darkmode - 0.2) / 0.8, 0.0, 1.0);
 
-    const int NS = 48;
+    int NS = int(mix(16.0, 48.0, u_quality));
     float d1 = 1e5, d2 = 1e5;
     int   id = 0;
 

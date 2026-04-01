@@ -101,17 +101,19 @@ export async function webGL2Driver(
   const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
   const timeLocation = gl.getUniformLocation(program, "u_time");
   const darkModeLocation = gl.getUniformLocation(program, "u_darkmode");
+  const qualityLocation = gl.getUniformLocation(program, "u_quality");
 
   // Enable the position attribute
   gl.enableVertexAttribArray(positionLocation);
   gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-  // darkmode
+  // darkmode + quality
   gl.useProgram(program);
   gl.uniform1f(
     darkModeLocation,
     clamp(options.settings["dark"] as number, darkModeColor, lightModeColor),
   );
+  gl.uniform1f(qualityLocation, (options.settings["quality"] as number) ?? 1.0);
 
   // Render loop
   let rafHandle: number | null = null;
@@ -232,6 +234,10 @@ export async function webGL2Driver(
     },
     setFpsLimit(fps) {
       minFrameTime = fps > 0 ? 1000 / fps : 0;
+    },
+    setQuality(quality) {
+      gl.useProgram(program);
+      gl.uniform1f(qualityLocation, quality);
     },
   } satisfies RenderProgramHandles;
 }

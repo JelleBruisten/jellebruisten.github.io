@@ -5,6 +5,7 @@ out vec4 fragColor;
 uniform highp vec2 u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 
 float hash(float n) {
     return fract(sin(n * 127.1) * 43758.5453);
@@ -28,7 +29,8 @@ void main() {
 
     // Scale count by viewport area so small screens get fewer flakes.
     // ~100 on a 1920×1080 desktop, ~40 on a 375×667 phone.
-    int count = clamp(int(sqrt(u_resolution.x * u_resolution.y) * 0.08), 15, 200);
+    float qScale = mix(0.35, 1.0, u_quality);
+    int count = clamp(int(sqrt(u_resolution.x * u_resolution.y) * 0.08 * qScale), 10, 200);
     float t = u_time;
 
     for (int i = 0; i < 300; i++) {

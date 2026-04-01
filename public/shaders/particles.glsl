@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 // Sin-free 2D hash — avoids the per-cell sin() cost of the classic hash.

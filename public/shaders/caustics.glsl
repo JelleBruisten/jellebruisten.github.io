@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float hash(float n)  { return fract(sin(n) * 43758.5453); }
@@ -41,8 +42,9 @@ void main() {
     vec2  warped = uv + vec2(wx - 0.5, wy - 0.5) * 0.13;
 
     // Directional cosine wave interference
+    int WAVES = int(mix(3.0, 7.0, u_quality));
     float wave = 0.0;
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < WAVES; i++) {
         float fi    = float(i);
         float angle = fi * 2.39996; // golden angle in radians
         vec2  dir   = vec2(cos(angle), sin(angle));
@@ -50,7 +52,7 @@ void main() {
         float spd   = 1.0 + hash(fi * 2.31) * 1.2;
         wave += cos(dot(warped * 10.0, dir) + t * spd + ph);
     }
-    wave /= 7.0;
+    wave /= float(WAVES);
 
     // Caustic lines: sharp at constructive interference peaks
     float caustic = pow(max(wave * 0.5 + 0.5, 0.0), 3.0);

@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 // gives the distance to a given line from a position p, 
@@ -100,7 +101,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     mouse *= rot * 0.5;
     
     // add layers
-    for(float i = 0.0; i <= 1.0; i += 0.2) {
+    for(float i = 0.0; i <= 1.0; i += mix(0.4, 0.2, u_quality)) {
         float z = fract(i + time);//layer(uv * 8)
         float size = mix(10.0, 0.5, z);
         

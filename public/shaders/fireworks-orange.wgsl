@@ -10,6 +10,7 @@ struct Uniforms {
   iResolution: vec2f,
   iTime: f32,
   iDarkmode: f32,
+  iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> u: Uniforms;
 
@@ -27,8 +28,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let bg = mix(vec3f(0.88, 0.90, 0.94), vec3f(0.02, 0.02, 0.06), dark);
     var col = bg;
 
-    let NUM_ROCKETS = 6;
-    let SPARKS = 40;
+    let NUM_ROCKETS = i32(mix(3.0, 6.0, u.iQuality));
+    let SPARKS = i32(mix(15.0, 40.0, u.iQuality));
     let t = u.iTime;
 
     for (var r = 0; r < NUM_ROCKETS; r++) {

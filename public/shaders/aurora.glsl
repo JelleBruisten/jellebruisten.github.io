@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float hash2(vec2 p) {
@@ -51,7 +52,7 @@ void mainImage(out vec4 outColor, in vec2 fragCoord) {
     vec3 col = mix(skyLight, skyDark, darkness);
 
     // Five aurora ribbons
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < int(mix(2.0, 5.0, u_quality)); i++) {
         float fi   = float(i);
         float seed = fi * 6.17;
         float drift = t * (0.14 + fi * 0.030);

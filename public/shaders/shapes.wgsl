@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -70,11 +71,12 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     uv.x  *= uniforms.iResolution.x / uniforms.iResolution.y;
 
     var col: f32 = 0.0;
-    for (var i: f32 = 0.0; i < 3.0; i += 1.0) {
+    let LAYERS = mix(1.0, 3.0, uniforms.iQuality);
+    for (var i: f32 = 0.0; i < LAYERS; i += 1.0) {
         let speed   = 0.20 / (i + 1.0);
         let size    = 0.90 / (i + 1.0);
         let spacing = 2.80 / (i + 1.0);
-        let num     = i32(floor((5.0 - i) * 3.0));
+        let num     = i32(floor((5.0 - i) * 3.0 * mix(0.5, 1.0, uniforms.iQuality)));
         let weight  = 1.0 - i * 0.15;
         col = max(col, layer(uv, uniforms.iTime + 150.123, num, speed, size, spacing) * weight);
     }

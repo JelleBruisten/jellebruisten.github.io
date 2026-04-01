@@ -10,6 +10,7 @@ struct Uniforms {
   iResolution: vec2f,
   iTime: f32,
   iDarkmode: f32,
+  iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> u: Uniforms;
 
@@ -36,7 +37,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
 
     // Scale count by viewport area so small screens get fewer flakes.
     // ~100 on a 1920×1080 desktop, ~40 on a 375×667 phone.
-    let count = clamp(i32(sqrt(u.iResolution.x * u.iResolution.y) * 0.08), 15, 200);
+    let qScale = mix(0.35, 1.0, u.iQuality);
+    let count = clamp(i32(sqrt(u.iResolution.x * u.iResolution.y) * 0.08 * qScale), 10, 200);
     let t = u.iTime;
 
     for (var i = 0; i < 300; i++) {

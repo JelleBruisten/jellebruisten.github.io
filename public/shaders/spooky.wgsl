@@ -10,6 +10,7 @@ struct Uniforms {
   iResolution: vec2f,
   iTime: f32,
   iDarkmode: f32,
+  iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> u: Uniforms;
 
@@ -143,7 +144,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let fogColor = mix(vec3f(0.20, 0.16, 0.25), vec3f(0.06, 0.04, 0.12), dark);
     col += fogColor * fog;
 
-    let count = clamp(i32(sqrt(u.iResolution.x * u.iResolution.y) * 0.02), 5, 20);
+    let qScale = mix(0.35, 1.0, u.iQuality);
+    let count = clamp(i32(sqrt(u.iResolution.x * u.iResolution.y) * 0.02 * qScale), 3, 20);
 
     for (var i = 0; i < 25; i++) {
         if (i >= count) { break; }

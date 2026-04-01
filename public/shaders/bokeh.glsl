@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
@@ -21,7 +22,7 @@ void main() {
     float lightBest  = 0.0;
     vec3  lightColor = vec3(0.5);
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < int(mix(12.0, 32.0, u_quality)); i++) {
         float fi  = float(i);
         float bx  = (hash(fi * 1.73) - 0.5) * ar;
         float by  = hash(fi * 2.91) - 0.5;

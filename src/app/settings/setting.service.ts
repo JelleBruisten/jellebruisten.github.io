@@ -9,6 +9,13 @@ import {
   signal,
 } from "@angular/core";
 import { darkModeColor, lightModeColor } from "../graphics/driver/constant";
+import {
+  QualityPreference,
+  QualityTier,
+  qualityLevel,
+  qualityScale,
+  resolveQuality,
+} from "../graphics/quality";
 
 const enum DarkPreference {
   Auto,
@@ -64,9 +71,15 @@ export class SettingsService {
   // 0 = unlimited, 60/120/180 = capped
   readonly fpsLimit = signal(60);
 
+  // Quality
+  readonly qualityPreference = signal<QualityPreference>(QualityPreference.Auto);
+  readonly quality = linkedSignal<QualityTier>(() => resolveQuality(this.qualityPreference()));
+
   readonly effectiveSettings = computed(() => ({
     dark: this.darkLevel(),
     fpsLimit: this.fpsLimit(),
+    quality: qualityLevel(this.quality()),
+    qualityScale: qualityScale(this.quality()),
   }));
 
   constructor() {

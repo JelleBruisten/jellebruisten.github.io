@@ -6,6 +6,7 @@ import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BackgroundService } from "./background.service";
 import { SettingsService } from "../settings/setting.service";
+import { QualityPreference, QualityTier, qualityLevel, qualityScale } from "./quality";
 
 /**
  * Full-screen animated background rendered via WebGL or WebGPU.
@@ -36,7 +37,11 @@ export class BackgroundComponent {
     fromEvent(window, "resize")
       .pipe(takeUntilDestroyed())
       .subscribe(() => {
-        this.programRef?.programHandle?.resize(window.innerWidth, window.innerHeight);
+        const scale = this.programRef?.scale ?? 1.0;
+        this.programRef?.programHandle?.resize(
+          Math.round(window.innerWidth * scale),
+          Math.round(window.innerHeight * scale),
+        );
       });
 
     // effect for updating background
@@ -75,6 +80,28 @@ export class BackgroundComponent {
       const fps = this.settings.fpsLimit();
       this.programRef?.programHandle?.setFpsLimit(fps);
     });
+
+    // Quality change: update shader uniform + resolution scale
+    effect(() => {
+      const quality = this.settings.quality();
+      const ref = this.programRef;
+      if (!ref?.programHandle) return;
+
+      const level = qualityLevel(quality);
+      const scale = qualityScale(quality);
+      ref.programHandle.setQuality(level);
+
+      // Resize canvas to match new quality scale
+      if (ref.scale !== scale) {
+        ref.scale = scale;
+        const w = Math.round(window.innerWidth * scale);
+        const h = Math.round(window.innerHeight * scale);
+        ref.programHandle.resize(w, h);
+      }
+    });
+
+    // Auto-detection: measure FPS for first 2 seconds, downgrade if needed
+    this.setupAutoQualityDetection();
 
     this.background.events$.pipe(takeUntilDestroyed()).subscribe((event) => {
       switch (event.type) {
@@ -118,6 +145,59 @@ export class BackgroundComponent {
       if (progress < 1) this.darkRafId = requestAnimationFrame(tick);
     };
     this.darkRafId = requestAnimationFrame(tick);
+  }
+
+  /**
+   * Reactive quality auto-detection.
+   *
+   * - FPS drops below 20 → immediately drop one quality tier (halves resolution)
+   * - FPS stays above 55 for 6 consecutive samples (~3 s) → try one tier higher
+   * - Resets when the shader changes
+   */
+  private setupAutoQualityDetection(): void {
+    const UPGRADE_STREAK_NEEDED = 6; // 6 × 500ms = 3 seconds of sustained high FPS
+    let goodStreak = 0;
+
+    // Reset streak when shader changes
+    effect(() => {
+      this.background.name();
+      goodStreak = 0;
+    });
+
+    effect(() => {
+      const fps = this.programManager.drawFps();
+      if (fps === 0) return;
+
+      if (untracked(() => this.settings.qualityPreference()) !== QualityPreference.Auto) return;
+
+      const current = untracked(() => this.settings.quality());
+
+      // Immediate downgrade on poor FPS
+      if (fps < 20 && current > QualityTier.Low) {
+        goodStreak = 0;
+        const next = (current - 1) as QualityTier;
+        if (this.settings.debugLogs()) {
+          console.debug("[quality auto] FPS=%d → downgrade %d → %d", fps, current, next);
+        }
+        this.settings.quality.set(next);
+        return;
+      }
+
+      // Cautious upgrade after sustained good FPS
+      if (fps >= 55 && current < QualityTier.High) {
+        goodStreak++;
+        if (goodStreak >= UPGRADE_STREAK_NEEDED) {
+          goodStreak = 0;
+          const next = (current + 1) as QualityTier;
+          if (this.settings.debugLogs()) {
+            console.debug("[quality auto] FPS=%d → upgrade %d → %d", fps, current, next);
+          }
+          this.settings.quality.set(next);
+        }
+      } else {
+        goodStreak = 0;
+      }
+    });
   }
 
   /**

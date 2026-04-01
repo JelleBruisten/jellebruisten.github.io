@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 void main() {
@@ -13,7 +14,7 @@ void main() {
     float d = 1.0, z = 0.0, r = 0.0;
     vec4 O = vec4(0.0);
 
-    for (float i = 0.0; i < 90.0; i += 1.0) {
+    for (float i = 0.0; i < mix(30.0, 90.0, u_quality); i += 1.0) {
         // Sample point along the ray
         vec3 p = z * normalize(vec3(I + I, 0.0) - u_resolution.xyy);
 

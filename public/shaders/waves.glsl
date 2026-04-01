@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
@@ -24,7 +25,7 @@ void main() {
     vec3  peak        = mix(peakLight,   peakDark,   darkness);
     vec3  trough      = mix(troughLight, troughDark, darkness);
 
-    const int NS = 6;
+    int NS = int(mix(3.0, 6.0, u_quality));
     float wave = 0.0;
     for (int i = 0; i < NS; i++) {
         float f    = float(i);

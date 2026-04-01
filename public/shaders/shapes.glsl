@@ -4,6 +4,7 @@ precision highp float;
 uniform vec2  u_resolution;
 uniform float u_time;
 uniform float u_darkmode;
+uniform float u_quality;
 out vec4 fragColor;
 
 float random(float seed) {
@@ -54,11 +55,11 @@ void main() {
     uv.x    *= u_resolution.x / u_resolution.y;
 
     float col = 0.0;
-    for (float i = 0.0; i < 3.0; i += 1.0) {
+    for (float i = 0.0; i < mix(1.0, 3.0, u_quality); i += 1.0) {
         float speed   = 0.20 / (i + 1.0);
         float size    = 0.90 / (i + 1.0);
         float spacing = 2.80 / (i + 1.0);
-        int   num     = int(floor((5.0 - i) * 3.0));
+        int   num     = int(floor((5.0 - i) * 3.0 * mix(0.5, 1.0, u_quality)));
         float weight  = 1.0 - i * 0.15;
         col = max(col, layer(uv, u_time + 150.123, num, speed, size, spacing) * weight);
     }

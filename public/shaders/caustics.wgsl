@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -53,7 +54,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
 
     // Directional cosine wave interference
     var wave = 0.0;
-    for (var i = 0; i < 7; i++) {
+    let WAVES = i32(mix(3.0, 7.0, uniforms.iQuality));
+    for (var i = 0; i < WAVES; i++) {
         let fi    = f32(i);
         let angle = fi * 2.39996; // golden angle in radians
         let dir   = vec2f(cos(angle), sin(angle));
@@ -61,7 +63,7 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
         let spd   = 1.0 + hash(fi * 2.31) * 1.2;
         wave += cos(dot(warped * 10.0, dir) + t * spd + ph);
     }
-    wave /= 7.0;
+    wave /= f32(WAVES);
 
     // Caustic lines: sharp at constructive interference peaks
     let caustic = pow(max(wave * 0.5 + 0.5, 0.0), 3.0);

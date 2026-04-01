@@ -142,5 +142,8 @@ onmessage = (evt) => {
     case "fpsLimit":
       programHandles?.setFpsLimit(evt.data.fps);
       break;
+    case "quality":
+      programHandles?.setQuality(evt.data.quality);
+      break;
   }
 };

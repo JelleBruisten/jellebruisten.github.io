@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, isDevMode, signal } from "@angular/core";
+import { DecimalPipe } from "@angular/common";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  isDevMode,
+  signal,
+} from "@angular/core";
 import { BackgroundService } from "../../graphics/background.service";
 import { BackgroundProgramManager } from "../../graphics/manager";
+import { QualityPreference, QualityTier } from "../../graphics/quality";
 import { GraphicsRuntime } from "../../graphics/runtime";
 import { SettingsService } from "../../settings/setting.service";
 import { SpecialDayService } from "../../settings/special-day.service";
@@ -9,7 +18,7 @@ import { GearIconComponent } from "../../shared/icons/gear-icon.component";
 
 @Component({
   selector: "app-settings-drawer",
-  imports: [CloseIconComponent, GearIconComponent],
+  imports: [CloseIconComponent, GearIconComponent, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
@@ -285,6 +294,28 @@ import { GearIconComponent } from "../../shared/icons/gear-icon.component";
           </div>
         </section>
 
+        <!-- Quality (dev only) -->
+        @if (isDevMode) {
+          <section class="section" aria-labelledby="quality-label">
+            <p id="quality-label" class="section-label">Quality</p>
+            <div class="btn-group" role="group" aria-label="Quality preference">
+              @for (opt of qualityOpts; track opt.value) {
+                <button
+                  [class.active]="settings.qualityPreference() === opt.value"
+                  class="opt-btn"
+                  (click)="setQualityPreference(opt.value)"
+                >
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+            <p style="margin-top: 0.5rem; font-size: 0.6875rem; color: rgba(148, 163, 184, 0.7)">
+              Active: {{ qualityLabel() }} · Scale:
+              {{ settings.effectiveSettings().qualityScale | number: "1.0-2" }}x
+            </p>
+          </section>
+        }
+
         <!-- Special Day (dev only) -->
         @if (isDevMode) {
           <section class="section" aria-labelledby="special-day-label">
@@ -363,4 +394,25 @@ export class SettingsDrawerComponent {
     { value: 180, label: "180" },
     { value: 0, label: "∞" },
   ] as const;
+
+  protected qualityOpts = [
+    { value: QualityPreference.Auto, label: "Auto" },
+    { value: QualityPreference.Low, label: "Low" },
+    { value: QualityPreference.Medium, label: "Medium" },
+    { value: QualityPreference.High, label: "High" },
+  ] as const;
+
+  private static readonly qualityLabels: Record<QualityTier, string> = {
+    [QualityTier.Low]: "Low",
+    [QualityTier.Medium]: "Medium",
+    [QualityTier.High]: "High",
+  };
+
+  protected qualityLabel = computed(
+    () => SettingsDrawerComponent.qualityLabels[this.settings.quality()],
+  );
+
+  protected setQualityPreference(value: QualityPreference): void {
+    this.settings.qualityPreference.set(value);
+  }
 }

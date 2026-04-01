@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -26,7 +27,7 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     let t        = uniforms.iTime * 3.0;
     let darkness = clamp(1.0 - (uniforms.iDarkmode - 0.2) / 0.8, 0.0, 1.0);
 
-    let N = 32;
+    let N = i32(mix(12.0, 32.0, uniforms.iQuality));
     var darkGlow   = vec3f(0.0);
     // Light: track the dominant (closest) blob per pixel for clear spatial structure
     var lightBest  = 0.0;

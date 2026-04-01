@@ -12,6 +12,7 @@ struct Uniforms {
     iResolution: vec2f,
     iTime: f32,
     iDarkmode: f32,
+    iQuality: f32,
 }
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
@@ -27,7 +28,8 @@ fn fs(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
     var r: f32 = 0.0;
     var O = vec4f(0.0);
 
-    for (var i: i32 = 0; i < 90; i++) {
+    let STEPS = i32(mix(30.0, 90.0, uniforms.iQuality));
+    for (var i: i32 = 0; i < STEPS; i++) {
         // Sample point along the ray
         var p = z * normalize(vec3f(I + I, 0.0) - res.xyy);
 

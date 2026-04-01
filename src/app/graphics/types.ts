@@ -16,6 +16,7 @@ export interface RenderProgramHandles {
   resize(width: number, height: number): void;
   darkmode(darkmode: number): void;
   setFpsLimit(fps: number): void;
+  setQuality(quality: number): void;
 }
 
 /** Options passed to a graphics driver to initialize a shader program. */
