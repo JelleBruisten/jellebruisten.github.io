@@ -294,27 +294,25 @@ import { GearIconComponent } from "../../shared/icons/gear-icon.component";
           </div>
         </section>
 
-        <!-- Quality (dev only) -->
-        @if (isDevMode) {
-          <section class="section" aria-labelledby="quality-label">
-            <p id="quality-label" class="section-label">Quality</p>
-            <div class="btn-group" role="group" aria-label="Quality preference">
-              @for (opt of qualityOpts; track opt.value) {
-                <button
-                  [class.active]="settings.qualityPreference() === opt.value"
-                  class="opt-btn"
-                  (click)="setQualityPreference(opt.value)"
-                >
-                  {{ opt.label }}
-                </button>
-              }
-            </div>
-            <p style="margin-top: 0.5rem; font-size: 0.6875rem; color: rgba(148, 163, 184, 0.7)">
-              Active: {{ qualityLabel() }} · Scale:
-              {{ settings.effectiveSettings().qualityScale | number: "1.0-2" }}x
-            </p>
-          </section>
-        }
+        <!-- Quality -->
+        <section class="section" aria-labelledby="quality-label">
+          <p id="quality-label" class="section-label">Quality</p>
+          <div class="btn-group" role="group" aria-label="Quality preference">
+            @for (opt of qualityOpts; track opt.value) {
+              <button
+                [class.active]="settings.qualityPreference() === opt.value"
+                class="opt-btn"
+                (click)="setQualityPreference(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <p style="margin-top: 0.5rem; font-size: 0.6875rem; color: rgba(148, 163, 184, 0.7)">
+            Active: {{ qualityLabel() }} · Scale:
+            {{ settings.effectiveSettings().qualityScale | number: "1.0-2" }}x
+          </p>
+        </section>
 
         <!-- Special Day (dev only) -->
         @if (isDevMode) {
