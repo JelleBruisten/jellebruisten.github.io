@@ -17,31 +17,35 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
+        cache: 'pnpm'
 
     - name: Install Dependencies
-      run: npm install
+      run: pnpm install --frozen-lockfile
 
     - name: Check Formatting
-      run: npm run format:check
+      run: pnpm format:check
 
     - name: Lint
-      run: npm run lint
+      run: pnpm lint
 
     - name: Test
-      run: npm test
+      run: pnpm test
 
     - name: Build Angular Project
-      run: npm run build
+      run: pnpm build
 
     - name: Upload static files as artifact
       id: deployment
       uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
       with:
-        path: dist/jelle-bruisten/browser    
+        path: dist/jelle-bruisten/browser
 
   # Deployment Job
   deploy:
