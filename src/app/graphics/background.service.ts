@@ -3,8 +3,8 @@ import { RenderStrategy, RenderStrategyType } from "./types";
 import { Subject } from "rxjs";
 import { SpecialDayService } from "../settings/special-day.service";
 
-/** Standard backgrounds shown in the settings drawer and used for daily rotation. */
-const standardBackgrounds = ["aurora", "particles", "perlin", "snow", "shapes", "ocean"] as const;
+/** Standard backgrounds shown in the settings drawer. Particles is the default. */
+const standardBackgrounds = ["particles", "aurora", "perlin", "snow", "shapes", "ocean"] as const;
 
 type BackgroundName =
   | (typeof standardBackgrounds)[number]
@@ -23,16 +23,10 @@ interface BackgroundEvent {
   data?: unknown | unknown[];
 }
 
-function pickDailyBackground(): BackgroundName {
-  const d = new Date();
-  const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86_400_000);
-  return standardBackgrounds[day % standardBackgrounds.length];
-}
-
 /**
  * Manages the active background shader and its render strategy.
  *
- * Selects a daily background deterministically from the day-of-year, exposes
+ * Defaults to the particles shader unless a special day overrides it. Exposes
  * signals for the current shader name and render strategy (WebGL / WebGPU,
  * main thread / worker), and emits playback events (pause, resume, stop)
  * consumed by {@link BackgroundComponent}.
@@ -44,7 +38,7 @@ export class BackgroundService {
   readonly strategy = signal<RenderStrategy | null>(null);
   readonly name = linkedSignal<BackgroundName>(() => {
     const theme = this.specialDay.theme();
-    return (theme?.shader ?? pickDailyBackground()) as BackgroundName;
+    return (theme?.shader ?? "particles") as BackgroundName;
   });
   readonly availableBackgrounds = [...standardBackgrounds];
 
