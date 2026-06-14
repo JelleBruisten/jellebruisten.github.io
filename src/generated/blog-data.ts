@@ -13,6 +13,26 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "csp-service-worker-connect-src",
+    title: "Service Workers and CSP: A Hidden Catch",
+    date: "2026-06-14",
+    description:
+      "You add a Content Security Policy, test it locally, everything works. Then you deploy and images stop loading — but only sometimes. Here's why service workers quietly change how CSP directives apply.",
+    tags: ["security", "csp", "angular", "service-worker"],
+    readTime: 5,
+    enabled: true,
+  },
+  {
+    slug: "testing-ngrx-signalstore-effects",
+    title: "Why Your SignalStore Spy Never Fires (and a 150-Line Fix)",
+    date: "2026-04-16",
+    description:
+      "Why vi.spyOn silently misses method calls inside signal-store effects, and a small tooling layer that fixes it by auto-wrapping every method at test time.",
+    tags: ["angular", "signals", "ngrx", "testing", "typescript"],
+    readTime: 9,
+    enabled: true,
+  },
+  {
     slug: "shader-background-system",
     title: "Behind the Background: How This Site's Shader System Works",
     date: "2026-03-28",
